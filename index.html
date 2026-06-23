@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Surf Center ‚Äî Margins Dashboard</title>
+<title>Surfcenter Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -125,7 +125,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
 <div id="gate">
   <div class="gate-card">
     <img src="logo.png" alt="Surfcenter" class="gate-logo" onerror="this.style.display='none';">
-    <div class="gate-title">Surfcenter ‚Äî Sales Portal</div>
+    <div class="gate-title">Surfcenter Analytics</div>
     <div class="gate-sub">Laad je margins CSV om verder te gaan</div>
     <label class="gate-drop" id="gateDrop">
       <input type="file" id="gateFile" accept=".csv,text/csv" style="display:none;">
@@ -139,7 +139,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
   <header>
     <div class="hdr-brand">
       <img src="logo.png" alt="Surfcenter" class="hdr-logo" onerror="this.style.display='none';">
-      <div class="hdr-title">Sales Portal</div>
+      <div class="hdr-title">Surfcenter Analytics</div>
     </div>
     <div class="hdr-spacer"></div>
     <div style="display:flex;gap:7px;align-items:center;">
@@ -348,7 +348,7 @@ const S={rows:[],grain:'month',year:2026,month:6,empFilter:'all',artSearch:'',ar
   rangeFrom:{year:2026,month:1},rangeTo:{year:2026,month:6},cumulative:false,
   targets:{}};
 
-const EUR='‚Ç¨';
+const EUR='\u20AC';
 const fmtE=n=>{const v=Math.round(n||0);return(v<0?'-'+EUR:EUR)+Math.abs(v).toLocaleString('nl-NL');};
 const fmtFull=n=>{const v=n||0;const abs=Math.abs(v);return(v<0?'-'+EUR:EUR)+abs.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});};
 const esc=s=>(s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
