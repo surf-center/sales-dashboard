@@ -348,8 +348,9 @@ const S={rows:[],grain:'month',year:2026,month:6,empFilter:'all',artSearch:'',ar
   rangeFrom:{year:2026,month:1},rangeTo:{year:2026,month:6},cumulative:false,
   targets:{}};
 
-const fmtE=n=>{const v=Math.round(n||0);return(v<0?'-‚Ç¨':'‚Ç¨')+Math.abs(v).toLocaleString('nl-NL');};
-const fmtFull=n=>{const v=n||0;const abs=Math.abs(v);return(v<0?'-‚Ç¨':'‚Ç¨')+abs.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});};
+const EUR='‚Ç¨';
+const fmtE=n=>{const v=Math.round(n||0);return(v<0?'-'+EUR:EUR)+Math.abs(v).toLocaleString('nl-NL');};
+const fmtFull=n=>{const v=n||0;const abs=Math.abs(v);return(v<0?'-'+EUR:EUR)+abs.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});};
 const esc=s=>(s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pn=v=>{if(!v&&v!==0)return 0;let s=String(v).trim().replace(/[^\d,.\-]/g,'');if(!s)return 0;const hC=s.includes(','),hD=s.includes('.');if(hC&&hD){s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');}else if(hC)s=s.replace(',','.');const n=parseFloat(s);return isFinite(n)?n:0;};
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const ys=new Date(Date.UTC(t.getUTCFullYear(),0,1));return{year:t.getUTCFullYear(),week:Math.ceil(((t-ys)/86400000+1)/7)};}
@@ -446,12 +447,12 @@ function render(){
   const showStandard=isAll&&!isTrend;
   const showYearTime=S.grain==='year'&&!isTrend;
   const showTrend=isTrend;
-  document.getElementById('cmpGrid').style.display=showStandard?'':'none';
+  document.getElementById('cmpGrid').style.display='none';
   document.getElementById('trendCard').style.display=showYearTime?'':'none';
   document.getElementById('barsGrid').style.display=isAll&&!isTrend?'':'none';
   document.getElementById('yearChartsSection').style.display=showYearTime?'':'none';
   document.getElementById('multiYearSection').style.display=showTrend?'':'none';
-  if(showStandard){renderCmp();renderTrend();renderBars();}
+  if(showStandard){renderTrend();renderBars();}
   if(showYearTime&&!showStandard){renderTrend();}
   if(showYearTime){renderYearCharts();}
   if(showTrend){renderMultiYearCharts();}
@@ -816,3 +817,4 @@ document.head.appendChild(st);
 </script>
 </body>
 </html>
+
