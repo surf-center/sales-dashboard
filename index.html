@@ -302,12 +302,22 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
         <div><div class="card-title">Categorieën</div><div class="card-sub" id="catSub">&#8212;</div></div>
         <div style="display:flex;gap:3px;background:var(--surface3);border:1px solid var(--border);border-radius:9px;padding:3px;">
           <button class="bron-sort-btn cat-sort-btn active" data-metric="selling">Revenue</button>
-          <button class="bron-sort-btn cat-sort-btn" data-metric="margin">Marge &#8364;</button>
           <button class="bron-sort-btn cat-sort-btn" data-metric="mpct">Marge %</button>
         </div>
       </div>
       <div id="catRows"></div>
-      <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Categorie-omzet en marge zoals gerapporteerd door Count-IT (per categorie-groep, aggregaat). Marge hier is <b>niet</b> gecorrigeerd met de vaste-marge-schattingen (85/90/95%) die elders in dit dashboard worden toegepast bij ontbrekende inkoopprijs &mdash; totalen kunnen daardoor afwijken van de artikeltabel.</div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Categorie-omzet en marge zoals gerapporteerd door Count-IT (per categorie-groep, aggregaat). Marge hier is <b>niet</b> gecorrigeerd met de vaste-marge-schattingen (85/90/95%) die elders in dit dashboard worden toegepast bij ontbrekende inkoopprijs &mdash; totalen kunnen daardoor afwijken van de artikeltabel. Percentage per categorie is het aandeel in de totale Sales-omzet van de gekozen periode.</div>
+    </div>
+    <!-- -- PRODUCTGROEPEN (gebundeld: windsurf/wing/windfoil/sup/neopreen/occasions) -- -->
+    <div class="card" id="bucketCard" style="display:none;">
+      <div class="card-head">
+        <div><div class="card-title">Productgroepen</div><div class="card-sub" id="bucketSub">&#8212;</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;">
+        <div class="chart-wrap" style="height:220px;"><canvas id="bucketChart"></canvas></div>
+        <div id="bucketRows"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Gebundeld op basis van Count-IT's eigen productgroep-taxonomie. Overige groepen (diversen, merchandise, kleding, shipping, rental, clinics/lessen, aanbetalingen, legacy/onbekende groepen) tellen hier niet in mee &mdash; totaal kan daardoor lager zijn dan de Sales-omzet in de Categorieën-kaart hierboven.</div>
     </div>
     <!-- -- YEAR GRAIN: extra charts (margin EUR and margin %) -- -->
     <div id="yearChartsSection" style="display:none;">
@@ -511,6 +521,7 @@ function render(){
   renderBron();
   renderBronByEmp();
   renderCategories();
+  renderBuckets();
   renderTable();
 }
 function renderPicker(){
@@ -824,6 +835,52 @@ function renderBron(){
   }
 }
 // -- CATEGORIEËN (aggregaat, apart geladen CSV) ------------------------------
+// Categorie-namen komen 1-op-1 uit Count-IT's eigen product-group taxonomie.
+// Sommige daarvan zijn dezelfde "neutrale" posten die de hoofd-KPI Revenue ook
+// buiten "Sales" houdt (trade-in, consignment buy-ins, shipping) — die moeten
+// dus apart getoond worden, anders telt de categorie-omzet hoger op dan de
+// Revenue-KPI omdat die posten daar bewust niet in meetellen.
+function catGroupType(name){
+  const c=(name||'').toLowerCase();
+  if(/consignation/.test(c)) return 'consignatie';
+  if(/^occ\s*&?\s*consig/.test(c)) return 'occ_consig';
+  if(/occasion/.test(c)) return 'occasion';
+  if(/shipping|verzendkosten/.test(c)) return 'verzending';
+  if(/inruil|swapping|purchase 2nd hand/.test(c)) return 'occasion';
+  return 'verkoop';
+}
+const CAT_TYPE_META={
+  consignatie:{label:'Consignment',color:'#0d9488'},
+  occasion:{label:'Trade-in',color:'#7c3aed'},
+  occ_consig:{label:'Occasion/Consignment',color:'#9333ea'},
+  verzending:{label:'Shipping',color:'#d97706'}
+};
+// -- PRODUCTGROEPEN: bundelt Count-IT's ~90 productgroepen in 6 hoofdgroepen.
+// Alles wat niet matcht (diversen, merchandise, kleding, shipping, rental,
+// clinics/lessen, aanbetalingen, legacy 'ZZ'/'DO NOT USE' restjes) wordt
+// bewust weggelaten — zie toelichting onder de Productgroepen-kaart.
+// 'WINGFOIL TOTAL' is een subtotaal-regel die Count-IT zelf al genereert
+// naast de losse WING-groepen en wordt uitgesloten om dubbeltelling te voorkomen.
+const BUCKET6_META={
+  windsurf:{label:'Windsurf',color:'#2563eb'},
+  wing:{label:'Wing',color:'#7c3aed'},
+  windfoil:{label:'Windfoil',color:'#0d9488'},
+  sup:{label:'SUP',color:'#059669'},
+  neopreen:{label:'Neopreen',color:'#0f172a'},
+  occasions:{label:'Occasions',color:'#d97706'}
+};
+const BUCKET6_ORDER=['windsurf','wing','windfoil','sup','neopreen','occasions'];
+function catBucket6(name){
+  const c=(name||'').toLowerCase().trim();
+  if(/wingfoil total/.test(c)) return null;
+  if(/consignation|occ\s*&?\s*consig|occasion|swapping gear|inruil/.test(c)) return 'occasions';
+  if(/windfoil|zz foil/.test(c)) return 'windfoil';
+  if(/\bwing\b|wing\s*-|wingsurf/.test(c)) return 'wing';
+  if(/windsurf/.test(c)) return 'windsurf';
+  if(/\bsup\b|sup\s*-/.test(c)) return 'sup';
+  if(/neo\b|neopreen|neoprene|wetsuit|lycra|poncho|surfhandschoen|surfschoen/.test(c)) return 'neopreen';
+  return null;
+}
 function renderCategories(){
   const card=document.getElementById('catCard');
   if(!card)return;
@@ -839,19 +896,67 @@ function renderCategories(){
     byCat.set(r.category,c);
   });
   const host=document.getElementById('catRows');
-  let list=[...byCat.values()].map(c=>({...c,mpct:c.selling!==0?(c.margin/c.selling*100):0}));
+  let list=[...byCat.values()].map(c=>({...c,mpct:c.selling!==0?(c.margin/c.selling*100):0,type:catGroupType(c.category)}));
   if(!list.length){host.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">Geen categorie-data voor deze periode.</div>';return;}
   const metric=S.catMetric||'selling';
-  list.sort((a,b)=>Math.abs(b[metric])-Math.abs(a[metric]));
-  const maxV=Math.max(1,...list.map(c=>Math.abs(c[metric])));
+  const salesList=list.filter(c=>c.type==='verkoop').sort((a,b)=>Math.abs(b[metric])-Math.abs(a[metric]));
+  const neutralList=list.filter(c=>c.type!=='verkoop').sort((a,b)=>Math.abs(b.selling)-Math.abs(a.selling));
   const fmtMetric=v=>metric==='mpct'?v.toFixed(1)+'%':fmtE(v);
-  host.innerHTML=list.map(c=>{
+  const salesTotal=salesList.reduce((s,c)=>s+c.selling,0);
+  const maxV=Math.max(1,...salesList.map(c=>Math.abs(c[metric])));
+  let html='';
+  html+='<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 0 10px;border-bottom:1px dashed var(--border);margin-bottom:10px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);">Sales &mdash; excl. trade-in / consignment / shipping</div><div style="font-size:16px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;">'+fmtMetric(salesTotal)+' <span style="font-size:11px;font-weight:700;color:var(--muted2);">&middot; 100%</span></div></div>';
+  if(!salesList.length){html+='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px;">Geen sales-categorieën voor deze periode.</div>';}
+  html+=salesList.map(c=>{
     const pct=(Math.abs(c[metric])/maxV*100).toFixed(1);
     const neg=c[metric]<0;
     const color=neg?'#dc2626':'#2563eb';
     const inside=pct>42;
+    const share=salesTotal!==0?(c.selling/salesTotal*100):0;
     const sub=(c.kassa||c.factuur)?('Kassa '+fmtE(c.kassa)+' · Facturen '+fmtE(c.factuur)):(c.cnt+' regel'+(c.cnt!==1?'s':''));
-    return '<div class="cat-item"><div class="br" style="grid-template-columns:180px 1fr 96px;"><span class="lbl" title="'+esc(c.category)+'">'+esc(c.category)+'</span><div class="track"><div class="fill" style="width:'+pct+'%;background:'+color+';">'+(inside?'<span class="fill-val">'+fmtMetric(c[metric])+'</span>':'')+'</div></div><span class="out-val" style="color:'+color+'">'+fmtMetric(c[metric])+'</span></div><div class="cat-sub-line">'+esc(sub)+'</div></div>';
+    return '<div class="cat-item"><div class="br" style="grid-template-columns:180px 1fr 96px 52px;"><span class="lbl" title="'+esc(c.category)+'">'+esc(c.category)+'</span><div class="track"><div class="fill" style="width:'+pct+'%;background:'+color+';">'+(inside?'<span class="fill-val">'+fmtMetric(c[metric])+'</span>':'')+'</div></div><span class="out-val" style="color:'+color+'">'+fmtMetric(c[metric])+'</span><span style="font-size:11px;font-weight:700;color:var(--muted);text-align:right;">'+share.toFixed(1)+'%</span></div><div class="cat-sub-line">'+esc(sub)+'</div></div>';
+  }).join('');
+  if(neutralList.length){
+    html+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;">Neutraal &mdash; telt niet mee in Sales-totaal of in de Revenue-KPI</div>';
+    html+=neutralList.map(c=>{
+      const meta=CAT_TYPE_META[c.type]||{label:'Overig',color:'var(--muted)'};
+      return '<div class="cat-item"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;"><span style="font-size:12px;font-weight:600;color:'+meta.color+';">'+esc(c.category)+' <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;background:'+meta.color+'1a;color:'+meta.color+';margin-left:4px;">'+meta.label+'</span></span><span style="font-size:12px;font-weight:700;color:'+meta.color+';">'+fmtE(Math.abs(c.selling))+'</span></div></div>';
+    }).join('');
+    html+='</div>';
+  }
+  host.innerHTML=html;
+}
+// -- PRODUCTGROEPEN: 6 gebundelde hoofdgroepen als donut + breakdown --------
+function renderBuckets(){
+  const card=document.getElementById('bucketCard');
+  if(!card)return;
+  if(!S.catRows||!S.catRows.length){card.style.display='none';return;}
+  const rows=S.catRows.filter(r=>matchPeriod(r)&&(S.empFilter==='all'||r.employee===S.empFilter));
+  const sums={};
+  BUCKET6_ORDER.forEach(k=>sums[k]={selling:0,margin:0,purchase:0,cnt:0});
+  rows.forEach(r=>{
+    const b=catBucket6(r.category);
+    if(!b||!sums[b])return;
+    sums[b].selling+=r.selling;sums[b].margin+=r.margin;sums[b].purchase+=r.purchase;sums[b].cnt++;
+  });
+  const total=BUCKET6_ORDER.reduce((s,k)=>s+Math.abs(sums[k].selling),0);
+  if(total===0){card.style.display='none';return;}
+  card.style.display='';
+  document.getElementById('bucketSub').textContent=pLabel()+(S.empFilter!=='all'?' · '+S.empFilter:'');
+  const active=BUCKET6_ORDER.filter(k=>Math.abs(sums[k].selling)>0);
+  dc('bucket');
+  charts.bucket=new Chart(document.getElementById('bucketChart'),{
+    type:'doughnut',
+    data:{labels:active.map(k=>BUCKET6_META[k].label),datasets:[{data:active.map(k=>Math.abs(sums[k].selling)),backgroundColor:active.map(k=>BUCKET6_META[k].color),borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.label+': '+fmtE(c.parsed)+' ('+(total>0?(c.parsed/total*100).toFixed(1):'0')+'%)'}}}}
+  });
+  const host=document.getElementById('bucketRows');
+  host.innerHTML=BUCKET6_ORDER.map(k=>{
+    const v=sums[k];const share=total!==0?(Math.abs(v.selling)/total*100):0;
+    const mpct=v.selling!==0?(v.margin/v.selling*100):0;
+    const meta=BUCKET6_META[k];
+    if(v.cnt===0)return'';
+    return '<div class="cat-item"><div class="br" style="grid-template-columns:100px 1fr 96px 52px;"><span class="lbl" style="color:'+meta.color+';"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+meta.color+';margin-right:6px;vertical-align:middle;"></span>'+meta.label+'</span><div class="track"><div class="fill" style="width:'+share.toFixed(1)+'%;background:'+meta.color+';"></div></div><span class="out-val" style="color:'+meta.color+'">'+fmtE(Math.abs(v.selling))+'</span><span style="font-size:11px;font-weight:700;color:var(--muted);text-align:right;">'+share.toFixed(1)+'%</span></div><div class="cat-sub-line" style="padding-left:110px;">Marge '+mpct.toFixed(1)+'%</div></div>';
   }).join('');
 }
 function parseCatCsv(rawRows){
@@ -1012,4 +1117,3 @@ document.head.appendChild(st);
 </script>
 </body>
 </html>
-
