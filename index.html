@@ -122,6 +122,11 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
 /* -- Kassa vs Facturen --------------------------------------- */
 .bron-sort-btn{padding:5px 12px;font-size:11px;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);}
 .bron-sort-btn.active{background:var(--accent);color:#fff;}
+/* -- Categorieën ------------------------------------------ */
+#catUploadBtn.loaded{border-color:var(--teal);color:var(--teal);background:var(--teal-soft);}
+.cat-item{padding:9px 0;border-bottom:1px solid var(--border);}
+.cat-item:last-child{border-bottom:none;}
+.cat-sub-line{padding-left:190px;font-size:10px;color:var(--muted);margin-top:3px;}
 </style>
 </head>
 <body>
@@ -146,6 +151,10 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
     </div>
     <div class="hdr-spacer"></div>
     <div style="display:flex;gap:7px;align-items:center;">
+      <label class="hdr-btn" id="catUploadBtn" title="Categorieën CSV laden">
+        <input type="file" id="catFile" accept=".csv,text/csv" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </label>
       <button class="hdr-btn" id="btnLogout" title="Opnieuw laden">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
@@ -171,7 +180,6 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       </div>
     </div>
     <div class="emp-tabs" id="empTabs"></div>
-
     <!-- Staff banners -->
     <div id="staffBanners" style="display:none;margin-bottom:20px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
@@ -184,7 +192,6 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       </div>
       <div id="staffCards" style="display:flex;flex-direction:column;gap:10px;"></div>
     </div>
-
     <!-- KPI cards -->
     <div class="kpi-grid">
       <div class="kpi" id="kRevCard">
@@ -210,7 +217,6 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
         </div>
       </div>
     </div>
-
     <!-- KPI detail panel -->
     <div id="kpiPanel" class="card" style="display:none;margin-bottom:24px;padding:24px 26px;">
       <div id="kRevDetail" style="display:none;">
@@ -252,7 +258,6 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
         </div>
       </div>
     </div>
-
     <!-- -- TARGET VS GEREALISEERD ------------------------------ -->
     <div id="targetsSection" class="card" style="display:none;margin-bottom:20px;">
       <div class="card-head">
@@ -263,13 +268,11 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       </div>
       <div id="targetsContent"></div>
     </div>
-
     <!-- Employee comparison bars (all-employees view) -->
     <div class="cmp-grid" id="cmpGrid">
       <div class="cmp-card"><div class="cmp-head"><span class="cmp-title">Revenue by employee</span><span id="cmpPeriod" style="font-size:12px;font-weight:700;">&#8212;</span></div><div class="cmp-rows" id="cmpRev"></div></div>
       <div class="cmp-card"><div class="cmp-head"><span class="cmp-title">Margin % by employee</span><span id="cmpPeriod2" style="font-size:12px;font-weight:700;">&#8212;</span></div><div class="cmp-rows" id="cmpMgn"></div></div>
     </div>
-
     <!-- Revenue trend chart -->
     <div class="card" id="trendCard">
       <div class="card-head">
@@ -282,7 +285,6 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       <div class="chart-wrap md"><canvas id="trendChart"></canvas></div>
       <div class="legend" id="trendLegend"></div>
     </div>
-
     <!-- -- KASSA VS FACTUREN ----------------------------------- -->
     <div class="card" id="bronCard" style="display:none;">
       <div class="card-head">
@@ -294,7 +296,19 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       <div id="bronChartWrap" class="chart-wrap" style="display:none;"><canvas id="bronChart"></canvas></div>
       <div class="legend" id="bronLegend"></div>
     </div>
-
+    <!-- -- CATEGORIEËN ------------------------------------------ -->
+    <div class="card" id="catCard" style="display:none;">
+      <div class="card-head">
+        <div><div class="card-title">Categorieën</div><div class="card-sub" id="catSub">&#8212;</div></div>
+        <div style="display:flex;gap:3px;background:var(--surface3);border:1px solid var(--border);border-radius:9px;padding:3px;">
+          <button class="bron-sort-btn cat-sort-btn active" data-metric="selling">Revenue</button>
+          <button class="bron-sort-btn cat-sort-btn" data-metric="margin">Marge &#8364;</button>
+          <button class="bron-sort-btn cat-sort-btn" data-metric="mpct">Marge %</button>
+        </div>
+      </div>
+      <div id="catRows"></div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Categorie-omzet en marge zoals gerapporteerd door Count-IT (per categorie-groep, aggregaat). Marge hier is <b>niet</b> gecorrigeerd met de vaste-marge-schattingen (85/90/95%) die elders in dit dashboard worden toegepast bij ontbrekende inkoopprijs &mdash; totalen kunnen daardoor afwijken van de artikeltabel.</div>
+    </div>
     <!-- -- YEAR GRAIN: extra charts (margin EUR and margin %) -- -->
     <div id="yearChartsSection" style="display:none;">
       <div class="grid-2">
@@ -314,7 +328,6 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
         </div>
       </div>
     </div>
-
     <!-- -- TREND GRAIN: multi-year charts ---------------------- -->
     <div id="multiYearSection" style="display:none;margin-top:20px;">
       <div class="grid-2" style="margin-bottom:0;">
@@ -341,14 +354,12 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
         <div class="legend" id="seasonLegend"></div>
       </div>
     </div>
-
     <!-- Bar charts -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-top:24px;margin-bottom:24px;" id="barsGrid">
       <div class="card" id="revBarsCard" style="margin-bottom:0;min-height:80px;"><div class="card-head"><div><div class="card-title">Revenue by employee</div><div class="card-sub" id="revBarSub">&#8212;</div></div></div><div class="bar-list" id="revBars"></div></div>
       <div class="card" id="mgnEuroBarsCard" style="margin-bottom:0;"><div class="card-head"><div><div class="card-title">Margin &#8364; by employee</div><div class="card-sub" id="mgnEuroBarSub">&#8212;</div></div></div><div class="bar-list" id="mgnEuroBars"></div></div>
       <div class="card" id="mgnBarsCard" style="margin-bottom:0;"><div class="card-head"><div><div class="card-title">Margin % by employee</div><div class="card-sub" id="mgnBarSub">&#8212;</div></div></div><div class="bar-list" id="mgnBars"></div></div>
     </div>
-
     <!-- -- KASSA VS FACTUREN PER MEDEWERKER (ranglijst) -------- -->
     <div class="card" id="bronEmpCard" style="display:none;margin-bottom:24px;">
       <div class="card-head">
@@ -373,17 +384,17 @@ const MONTHS_S=['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov
 const COLORS=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2','#be185d','#0f172a','#ea580c','#0d9488','#6366f1','#84cc16'];
 const YEAR_COLORS=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2'];
 const BRON_COLORS={kassa:'#2563eb',factuur:'#0d9488'};
-
 const S={rows:[],grain:'month',year:2026,month:6,empFilter:'all',artSearch:'',artSort:{col:'selling',dir:'desc'},staffSort:'selling',
   rangeFrom:{year:2026,month:1},rangeTo:{year:2026,month:6},cumulative:false,
-  targets:{},bronEmpSort:'total'};
-
-const EUR='\u20AC';
+  targets:{},bronEmpSort:'total',catRows:[],catMetric:'selling'};
+const EUR='€';
 const fmtE=n=>{const v=Math.round(n||0);return(v<0?'-'+EUR:EUR)+Math.abs(v).toLocaleString('nl-NL');};
 const fmtFull=n=>{const v=n||0;const abs=Math.abs(v);return(v<0?'-'+EUR:EUR)+abs.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});};
 const esc=s=>(s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pn=v=>{if(!v&&v!==0)return 0;let s=String(v).trim().replace(/[^\d,.\-]/g,'');if(!s)return 0;const hC=s.includes(','),hD=s.includes('.');if(hC&&hD){s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');}else if(hC)s=s.replace(',','.');const n=parseFloat(s);return isFinite(n)?n:0;};
 const normBron=v=>{const s=(v||'').toString().trim().toLowerCase();if(!s)return null;if(s.includes('factu')||s.includes('invoice'))return'factuur';if(s.includes('kassa')||s.includes('pos')||s.includes('cash'))return'kassa';return null;};
+const nk=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const findCol=(obj,pats)=>{const keys=Object.keys(obj);for(const p of pats){const n=nk(p);for(const k of keys)if(nk(k)===n)return k;}for(const p of pats){const n=nk(p);if(!n)continue;for(const k of Object.keys(obj))if(nk(k).includes(n))return k;}return null;};
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const ys=new Date(Date.UTC(t.getUTCFullYear(),0,1));return{year:t.getUTCFullYear(),week:Math.ceil(((t-ys)/86400000+1)/7)};}
 function parseDate(s){if(!s)return null;const m=String(s).trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);const d=new Date(s);return isNaN(d)?null:d;}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -450,7 +461,6 @@ function aggCats(rows){
 }
 function agg(rows){const cats=aggCats(rows);const v=cats.verkoop;return{selling:v.sell,purchase:v.pur,margin:v.mgn,lines:rows.length,mpct:v.sell!==0?(v.mgn/v.sell*100):0,cats};}
 function aggByEmp(rows){const m=new Map();rows.forEach(r=>{const a=m.get(r.employee)||{employee:r.employee,selling:0,purchase:0,margin:0,lines:0,consignatieVal:0,occasionVal:0,verzendingVal:0};if(r.cat==='verkoop'){a.selling+=r.selling;a.purchase+=r.purchase;a.margin+=r.margin;}else if(r.cat==='consignatie')a.consignatieVal+=Math.abs(r.selling);else if(r.cat==='occasion')a.occasionVal+=Math.abs(r.selling);else if(r.cat==='verzending')a.verzendingVal+=Math.abs(r.selling);a.lines+=1;m.set(r.employee,a);});return[...m.values()].map(a=>({...a,mpct:a.selling!==0?(a.margin/a.selling*100):0}));}
-
 function bronRowFilter(r){return S.empFilter==='all'||r.employee===S.empFilter;}
 function hasBronData(){return S.rows.some(r=>r.bron);}
 function aggBron(rows){
@@ -462,25 +472,22 @@ function aggBron(rows){
   });
   return o;
 }
-
 function pLabel(){
   if(S.grain==='trend'){
     const yrs=[...new Set(S.rows.map(r=>r._y))].sort();
-    return yrs.length===1?''+yrs[0]:yrs[0]+' \u2013 '+yrs[yrs.length-1];
+    return yrs.length===1?''+yrs[0]:yrs[0]+' – '+yrs[yrs.length-1];
   }
   if(S.grain==='year')  return''+S.year;
   if(S.grain==='month') return MONTHS[S.month-1]+' '+S.year;
   if(S.grain==='range'){
     const f=MONTHS_S[S.rangeFrom.month-1]+' '+S.rangeFrom.year;
     const t=MONTHS_S[S.rangeTo.month-1]+' '+S.rangeTo.year;
-    return f+' \u2013 '+t;
+    return f+' – '+t;
   }
-  return'\u2014';
+  return'—';
 }
-
 const charts={};
 function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-
 function render(){
   document.getElementById('periodLabel').textContent=pLabel();
   const isTrend=S.grain==='trend';
@@ -503,9 +510,9 @@ function render(){
   if(showTrend){renderMultiYearCharts();}
   renderBron();
   renderBronByEmp();
+  renderCategories();
   renderTable();
 }
-
 function renderPicker(){
   const host=document.getElementById('periodPicker');host.innerHTML='';
   if(S.grain==='trend')return;
@@ -522,9 +529,7 @@ function renderPicker(){
     host.appendChild(mk(years.map(y=>[y,y]),S.rangeTo.year,v=>{S.rangeTo.year=+v;render();}));
   }
 }
-
 function renderEmpTabs(){const emps=getEmpsInPeriod();document.getElementById('empTabs').innerHTML=[['all','All employees'],...emps.map(e=>[e,e])].map(([v,l])=>{const act=S.empFilter===v;const color=v!=='all'?empColor(v):'';return'<button class="emp-tab'+(act?' active':'')+'" data-emp="'+esc(v)+'" style="'+(act&&v!=='all'?'background:'+color+';border-color:'+color+';':'')+'">'+esc(v==='all'?l:l.split(' ')[0])+'</button>';}).join('');}
-
 window.toggleKpiDetail=function(id,btn){
   const ALL=['kRevDetail','kMarginDetail','kLinesDetail'];
   const BTNS=['kRevBtn','kMarginBtn','kLinesBtn'];
@@ -532,11 +537,10 @@ window.toggleKpiDetail=function(id,btn){
   if(!el)return;
   const wasOpen=el.style.display!=='none'&&el.style.display!=='';
   ALL.forEach((sid,i)=>{const d=document.getElementById(sid);if(d)d.style.display='none';const b=document.getElementById(BTNS[i]);if(b){b.classList.remove('open');b.textContent='+';}});
-  if(!wasOpen){el.style.display='block';if(btn){btn.classList.add('open');btn.textContent='\u00D7';}}
+  if(!wasOpen){el.style.display='block';if(btn){btn.classList.add('open');btn.textContent='×';}}
   const panel=document.getElementById('kpiPanel');
   if(panel){const anyOpen=ALL.some(sid=>{const d=document.getElementById(sid);return d&&d.style.display!=='none'&&d.style.display!=='';});panel.style.display=anyOpen?'block':'none';}
 };
-
 function renderKpis(){
   const rows=filtered();const a=agg(rows);
   document.getElementById('kRevenue').textContent=fmtE(a.selling);
@@ -545,12 +549,11 @@ function renderKpis(){
   document.getElementById('kLines').textContent=a.cats.verkoop.qty;
   renderBreakdownCards(a.cats,rows);
 }
-
 function renderBreakdownCards(cats,rows){
   const vk=cats.verkoop,sh=cats.verzending,co=cats.consignatie,oc=cats.occasion;
   const ctSellRaw=rows.reduce((s,r)=>s+r.selling,0);
   const ctSell=ctSellRaw||null;
-  const rLine=(label,val,opts={})=>{const{bold,color,sep,prefix}=opts;const clr=color||(bold?'var(--text)':'var(--text2)');return`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:${bold?'8':'5'}px 0;${sep?'border-top:2px solid var(--border);margin-top:6px;padding-top:10px;':''}"><div style="font-size:${bold?'12':'11'}px;font-weight:${bold?700:500};color:${clr};">${prefix||''}${label}</div><div style="font-size:${bold?'15':'12'}px;font-weight:${bold?800:600};color:${clr};font-variant-numeric:tabular-nums;">${val!=null?fmtFull(val):'\u2014'}</div></div>`;};
+  const rLine=(label,val,opts={})=>{const{bold,color,sep,prefix}=opts;const clr=color||(bold?'var(--text)':'var(--text2)');return`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:${bold?'8':'5'}px 0;${sep?'border-top:2px solid var(--border);margin-top:6px;padding-top:10px;':''}"><div style="font-size:${bold?'12':'11'}px;font-weight:${bold?700:500};color:${clr};">${prefix||''}${label}</div><div style="font-size:${bold?'15':'12'}px;font-weight:${bold?800:600};color:${clr};font-variant-numeric:tabular-nums;">${val!=null?fmtFull(val):'—'}</div></div>`;};
   let revHtml='';
   if(ctSell!=null){revHtml+=`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 10px;border-bottom:1px dashed var(--border);margin-bottom:6px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);">Revenue</div><div style="font-size:18px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;">${fmtFull(ctSell)}</div></div>`;}
   if(co.sell>0)revHtml+=rLine('Consignatie buy-backs',co.sell,{color:'var(--teal)',prefix:'+ '});
@@ -562,12 +565,12 @@ function renderBreakdownCards(cats,rows){
   const kassaSell=bronRows.filter(r=>r.bron==='kassa').reduce((s,r)=>s+r.selling,0);
   const factuurSell=bronRows.filter(r=>r.bron==='factuur').reduce((s,r)=>s+r.selling,0);
   if(kassaSell||factuurSell){
-    revHtml+=rLine('\u21B3 Kassa',kassaSell,{color:BRON_COLORS.kassa});
-    revHtml+=rLine('\u21B3 Facturen',factuurSell,{color:BRON_COLORS.factuur});
+    revHtml+=rLine('↳ Kassa',kassaSell,{color:BRON_COLORS.kassa});
+    revHtml+=rLine('↳ Facturen',factuurSell,{color:BRON_COLORS.factuur});
   }
   const revEl=document.getElementById('kRevDetail');
   if(revEl){const existing=revEl.querySelector('div[data-rev-rows]');if(existing){existing.innerHTML=revHtml;}else{const d=document.createElement('div');d.dataset.revRows='1';d.innerHTML=revHtml;revEl.appendChild(d);}}
-  const rules={real:{label:'Known cost price',color:'var(--text)',sell:0,mgn:0,cnt:0},'used-c':{label:'USED C \u2014 10%',color:'#0d9488',sell:0,mgn:0,cnt:0},diverse:{label:'Misc / repair \u2014 5%',color:'#d97706',sell:0,mgn:0,cnt:0},sponsor:{label:'Sponsoring \u2014 15%',color:'#ec4899',sell:0,mgn:0,cnt:0},'no-inkoop':{label:'No cost price \u2014 15%',color:'#6366f1',sell:0,mgn:0,cnt:0},inruil:{label:'Trade-in (neutral)',color:'#9ca3af',sell:0,mgn:0,cnt:0}};
+  const rules={real:{label:'Known cost price',color:'var(--text)',sell:0,mgn:0,cnt:0},'used-c':{label:'USED C — 10%',color:'#0d9488',sell:0,mgn:0,cnt:0},diverse:{label:'Misc / repair — 5%',color:'#d97706',sell:0,mgn:0,cnt:0},sponsor:{label:'Sponsoring — 15%',color:'#ec4899',sell:0,mgn:0,cnt:0},'no-inkoop':{label:'No cost price — 15%',color:'#6366f1',sell:0,mgn:0,cnt:0},inruil:{label:'Trade-in (neutral)',color:'#9ca3af',sell:0,mgn:0,cnt:0}};
   rows.forEach(r=>{const rk=r._marginRule||'real';if(!rules[rk])return;rules[rk].sell+=r.selling;rules[rk].mgn+=r.margin;rules[rk].cnt++;});
   const totalSell=vk.sell||0,totalMgn=vk.mgn||0,mgnPct=totalSell>0?(totalMgn/totalSell*100):0;
   const row2=(label,sell,mgn,cnt,color,bold,border)=>{const pct=sell>0?(mgn/sell*100):0;return`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;${border?'border-top:1px solid var(--border);margin-top:4px;padding-top:9px;':''}"><div><div style="font-size:${bold?'12':'11'}px;font-weight:${bold?700:500};color:${color||'var(--text2)'};">${label}</div>${cnt!==null?`<div style="font-size:10px;color:var(--muted);">${cnt} items</div>`:''}</div><div style="text-align:right;"><div style="font-size:${bold?'14':'12'}px;font-weight:${bold?800:600};color:${color||'var(--text2)'};">${fmtFull(mgn)}</div>${sell>0&&!bold?`<div style="font-size:10px;color:var(--muted);">${pct.toFixed(1)}%</div>`:''}</div></div>`;};
@@ -580,7 +583,6 @@ function renderBreakdownCards(cats,rows){
   document.getElementById('bdMgnTable').innerHTML=mgnHtml;
   document.getElementById('bdMgnTable').style.display='block';
 }
-
 function renderStaffBanners(){
   const host=document.getElementById('staffBanners');const cards=document.getElementById('staffCards');
   if(!host||!cards)return;
@@ -598,7 +600,7 @@ function renderStaffBanners(){
   cards.innerHTML=byE.map(({emp,a,rows},idx)=>{
     const color=empColor(emp);
     const initial=emp.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    const highlight=sortKey==='selling'?'Revenue':sortKey==='margin'?'Margin \u20AC':'Margin %';
+    const highlight=sortKey==='selling'?'Revenue':sortKey==='margin'?'Margin €':'Margin %';
     const highlightVal=sortKey==='selling'?fmtE(a.selling):sortKey==='margin'?fmtE(a.margin):a.mpct.toFixed(1)+'%';
     let tgtHtml='';
     return`<div style="background:var(--surface);border:1px solid var(--border);border-left:4px solid ${color};border-radius:var(--r);padding:16px 20px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;box-shadow:var(--sh-sm);">
@@ -615,7 +617,7 @@ function renderStaffBanners(){
       <div style="display:flex;gap:16px;flex-wrap:wrap;">
         ${sortKey!=='selling'?`<div class="jk"><div class="l">Revenue</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.selling)}</div></div>`:''}
         <div class="jk"><div class="l">Cost price</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.purchase)}</div></div>
-        ${sortKey!=='margin'?`<div class="jk"><div class="l">Margin \u20AC</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.margin)}</div></div>`:''}
+        ${sortKey!=='margin'?`<div class="jk"><div class="l">Margin €</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.margin)}</div></div>`:''}
         ${sortKey!=='mpct'?`<div class="jk"><div class="l">Margin %</div><div class="v" style="font-size:14px;color:var(--text)">${a.mpct.toFixed(1)}%</div></div>`:''}
         <div class="jk"><div class="l">Consignment</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.cats.consignatie.sell)}</div></div>
         <div class="jk"><div class="l">Trade-in</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.cats.occasion.sell)}</div></div>
@@ -623,7 +625,6 @@ function renderStaffBanners(){
     </div>`;
   }).join('');
 }
-
 // -- TARGET HELPERS ---------------------------------------------------------
 function empToTargetKey(empName){
   const first=(empName||'').split(' ')[0].toLowerCase();
@@ -682,7 +683,7 @@ function renderTargets(){
     return`<div class="tgt-metric">
       <span class="tgt-lbl">${label}</span>
       <div class="tgt-bar-wrap"><div class="tgt-bar-fill" style="width:${w}%;background:${pctCol};"></div></div>
-      <span class="tgt-pct" style="color:${pctCol};">${pct.toFixed(0)}%${over?' \u2191':''}</span>
+      <span class="tgt-pct" style="color:${pctCol};">${pct.toFixed(0)}%${over?' ↑':''}</span>
       <span class="tgt-vals">${fmtE(actual)} / ${fmtE(target)}</span>
     </div>`;
   };
@@ -694,7 +695,7 @@ function renderTargets(){
       html+=`<div class="tgt-row" style="border-left:4px solid ${color};">
         <div class="tgt-emp" style="color:${color};">${esc(first)}</div>
         ${mkBar(a.selling,t?t.revenue:null,'Revenue')}
-        ${mkBar(a.margin,t?t.margin:null,'Marge \u20AC')}
+        ${mkBar(a.margin,t?t.margin:null,'Marge €')}
       </div>`;
     });
     html+='</div>';
@@ -704,36 +705,32 @@ function renderTargets(){
       html+=`<div class="tgt-row" style="border-left:4px solid ${me.color};">
         <div class="tgt-emp" style="color:${me.color};">${esc(me.emp.split(' ')[0])}</div>
         ${mkBar(me.a.selling,me.t?me.t.revenue:null,'Revenue')}
-        ${mkBar(me.a.margin,me.t?me.t.margin:null,'Marge \u20AC')}
+        ${mkBar(me.a.margin,me.t?me.t.margin:null,'Marge €')}
       </div>`;
     }
   }
   document.getElementById('targetsContent').innerHTML=html;
 }
-
 // -- RENDER LEGEND ----------------------------------------------------------
 function renderLegend(id,labels,colors){
   const el=document.getElementById(id);if(!el)return;
   el.innerHTML=labels.map((l,i)=>`<div class="legend-item"><span class="legend-sw" style="background:${colors[i%colors.length]};"></span>${esc(l.split(' ')[0])}</div>`).join('');
 }
-
 function renderCmp(){const rows=filtered();const byE=aggByEmp(rows).sort((a,b)=>b.selling-a.selling);const lbl=pLabel();document.getElementById('cmpPeriod').textContent=lbl;document.getElementById('cmpPeriod2').textContent=lbl;const maxS=Math.max(1,...byE.map(e=>Math.abs(e.selling)));document.getElementById('cmpRev').innerHTML=byE.map(e=>{const color=empColor(e.employee);const pct=(Math.abs(e.selling)/maxS*100).toFixed(0);return'<div class="cmp-row"><span class="cmp-name" style="color:'+color+'">'+esc(e.employee.split(' ')[0])+'</span><div class="cmp-bar"><div class="cmp-fill" style="width:'+pct+'%;background:'+color+';"></div></div><span class="cmp-val">'+fmtE(e.selling)+'</span><span class="cmp-pct" style="color:var(--muted)">'+e.lines+'x</span></div>';}).join('')||'<div>Geen data</div>';const byM=[...byE].sort((a,b)=>b.mpct-a.mpct);const maxM=Math.max(1,...byM.map(e=>Math.abs(e.mpct)));document.getElementById('cmpMgn').innerHTML=byM.map(e=>{const color=empColor(e.employee);const pct=(Math.abs(e.mpct)/maxM*100).toFixed(0);const cls=e.mpct>=25?'up':e.mpct>=10?'neutral':'down';return'<div class="cmp-row"><span class="cmp-name" style="color:'+color+'">'+esc(e.employee.split(' ')[0])+'</span><div class="cmp-bar"><div class="cmp-fill" style="width:'+pct+'%;background:'+color+';"></div></div><span class="cmp-val">'+fmtE(e.margin)+'</span><span class="cmp-pct '+cls+'">'+e.mpct.toFixed(1)+'%</span></div>';}).join('')||'<div>Geen data</div>';}
-
 function renderTrend(){dc('trend');const emps=getEmps();const g=S.grain;let labels=[],datasets=[];
   const makePairs=(fromY,fromM,toY,toM)=>{const ps=[];let y=fromY,m=fromM;while(y<toY||(y===toY&&m<=toM)){ps.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}return ps;};
   if(g==='range'){const pairs=makePairs(S.rangeFrom.year,S.rangeFrom.month,S.rangeTo.year,S.rangeTo.month);labels=pairs.map(p=>{const[y,m]=p.split('-');return MONTHS_S[+m-1]+(S.rangeFrom.year!==S.rangeTo.year?' '+y:'');});datasets=emps.map((emp,i)=>{const monthly=pairs.map(p=>{const[y,m]=p.split('-');return S.rows.filter(r=>r.employee===emp&&r._y===+y&&r._m===+m&&r.cat==='verkoop').reduce((s,r)=>s+r.selling,0)||0;});const data=S.cumulative?monthly.map((v,i,a)=>a.slice(0,i+1).reduce((s,x)=>s+x,0)||null):monthly.map(v=>v||null);return{label:emp,data,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'18',borderWidth:2,pointRadius:2,tension:.3,spanGaps:false,fill:S.cumulative};});}
   else if(g==='year'){labels=MONTHS_S.slice();datasets=emps.map((emp,i)=>{const monthly=Array.from({length:12},(_,mi)=>S.rows.filter(r=>r.employee===emp&&r._y===S.year&&r._m===mi+1&&r.cat==='verkoop').reduce((s,r)=>s+r.selling,0)||0);const data=S.cumulative?monthly.map((v,i,a)=>a.slice(0,i+1).reduce((s,x)=>s+x,0)||null):monthly.map(v=>v||null);return{label:emp,data,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'18',borderWidth:2,pointRadius:3,tension:.3,spanGaps:false,fill:S.cumulative};});}
   else if(g==='month'){const days=new Date(S.year,S.month,0).getDate();labels=Array.from({length:days},(_,i)=>String(i+1));datasets=emps.map((emp,i)=>{const daily=labels.map(d=>S.rows.filter(r=>r.employee===emp&&r._y===S.year&&r._m===S.month&&r._dom===+d&&r.cat==='verkoop').reduce((s,r)=>s+r.selling,0)||0);const data=S.cumulative?daily.map((v,i,a)=>a.slice(0,i+1).reduce((s,x)=>s+x,0)||null):daily.map(v=>v||null);return{label:emp,data,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'18',borderWidth:2,pointRadius:2.5,tension:.3,spanGaps:false,fill:S.cumulative};});}
-  document.getElementById('trendSub').textContent='Per medewerker \u00B7 '+pLabel();
+  document.getElementById('trendSub').textContent='Per medewerker · '+pLabel();
   const empsForLegend=getEmps();
   renderLegend('trendLegend',empsForLegend,COLORS);
-  charts.trend=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'\u2014':fmtFull(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',maxRotation:0}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:v=>fmtE(v)},beginAtZero:false}}}});}
-
+  charts.trend=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'—':fmtFull(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',maxRotation:0}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:v=>fmtE(v)},beginAtZero:false}}}});}
 // -- YEAR GRAIN EXTRA CHARTS ------------------------------------------------
 function renderYearCharts(){
   dc('mgnTrend');dc('mgnPctTrend');
   const emps=getEmps();const labels=MONTHS_S.slice();
-  const baseOpts=(yFmt)=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'\u2014':yFmt(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',maxRotation:0}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:yFmt}}}});
+  const baseOpts=(yFmt)=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'—':yFmt(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',maxRotation:0}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:yFmt}}}});
   // Marge EUR per maand
   const mgnDS=emps.map((emp,i)=>{
     const data=Array.from({length:12},(_,mi)=>{const v=S.rows.filter(r=>r.employee===emp&&r._y===S.year&&r._m===mi+1&&r.cat==='verkoop').reduce((s,r)=>s+r.margin,0);return v||null;});
@@ -751,14 +748,13 @@ function renderYearCharts(){
   charts.mgnPctTrend=new Chart(document.getElementById('mgnPctTrendChart'),{type:'line',data:{labels,datasets:mgnPctDS},options:baseOpts(v=>v.toFixed(1)+'%')});
   renderLegend('mgnPctTrendLegend',emps,COLORS);
 }
-
 // -- TREND GRAIN MULTI-YEAR CHARTS ------------------------------------------
 function renderMultiYearCharts(){
   dc('multiRevYear');dc('multiMgnPctYear');dc('season');
   const years=[...new Set(S.rows.map(r=>r._y))].sort();
   const emps=getEmps();
   const empFilter=S.empFilter==='all'?null:S.empFilter;
-  const baseOpts=(yFmt)=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'\u2014':yFmt(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280'}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:yFmt}}}});
+  const baseOpts=(yFmt)=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'—':yFmt(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280'}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:yFmt}}}});
   const empsToShow=empFilter?[empFilter]:emps;
   // Revenue per jaar (grouped bar per employee)
   const revByYearDS=empsToShow.map((emp,i)=>({
@@ -787,17 +783,16 @@ function renderMultiYearCharts(){
   charts.season=new Chart(document.getElementById('seasonChart'),{type:'line',data:{labels:MONTHS_S.slice(),datasets:seasonDS},options:baseOpts(v=>fmtE(v))});
   renderLegend('seasonLegend',years.map(String),YEAR_COLORS);
 }
-
 // -- KASSA VS FACTUREN (trend overzicht) ------------------------------------
 function renderBron(){
   const card=document.getElementById('bronCard');
   if(!card)return;
   if(!hasBronData()){card.style.display='none';return;}
   card.style.display='';
-  document.getElementById('bronSub').textContent=pLabel()+(S.empFilter!=='all'?' \u00B7 '+S.empFilter:'');
+  document.getElementById('bronSub').textContent=pLabel()+(S.empFilter!=='all'?' · '+S.empFilter:'');
   const simpleWrap=document.getElementById('bronSimple'),chartWrap=document.getElementById('bronChartWrap');
   dc('bron');
-  const baseOpts={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'\u2014':fmtFull(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280'}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:v=>fmtE(v)}}}};
+  const baseOpts={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'—':fmtFull(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280'}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:v=>fmtE(v)}}}};
   if(S.grain==='month'||S.grain==='range'){
     chartWrap.style.display='none';simpleWrap.style.display='block';
     const rows=filtered().filter(bronRowFilter);
@@ -828,7 +823,60 @@ function renderBron(){
     renderLegend('bronLegend',['Kassa','Facturen'],[BRON_COLORS.kassa,BRON_COLORS.factuur]);
   }
 }
-
+// -- CATEGORIEËN (aggregaat, apart geladen CSV) ------------------------------
+function renderCategories(){
+  const card=document.getElementById('catCard');
+  if(!card)return;
+  if(!S.catRows||!S.catRows.length){card.style.display='none';return;}
+  card.style.display='';
+  document.getElementById('catSub').textContent=pLabel()+(S.empFilter!=='all'?' · '+S.empFilter:'');
+  const rows=S.catRows.filter(r=>matchPeriod(r)&&(S.empFilter==='all'||r.employee===S.empFilter));
+  const byCat=new Map();
+  rows.forEach(r=>{
+    const c=byCat.get(r.category)||{category:r.category,selling:0,purchase:0,margin:0,kassa:0,factuur:0,cnt:0};
+    c.selling+=r.selling;c.purchase+=r.purchase;c.margin+=r.margin;c.cnt++;
+    if(r.bron==='kassa')c.kassa+=r.selling;else if(r.bron==='factuur')c.factuur+=r.selling;
+    byCat.set(r.category,c);
+  });
+  const host=document.getElementById('catRows');
+  let list=[...byCat.values()].map(c=>({...c,mpct:c.selling!==0?(c.margin/c.selling*100):0}));
+  if(!list.length){host.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">Geen categorie-data voor deze periode.</div>';return;}
+  const metric=S.catMetric||'selling';
+  list.sort((a,b)=>Math.abs(b[metric])-Math.abs(a[metric]));
+  const maxV=Math.max(1,...list.map(c=>Math.abs(c[metric])));
+  const fmtMetric=v=>metric==='mpct'?v.toFixed(1)+'%':fmtE(v);
+  host.innerHTML=list.map(c=>{
+    const pct=(Math.abs(c[metric])/maxV*100).toFixed(1);
+    const neg=c[metric]<0;
+    const color=neg?'#dc2626':'#2563eb';
+    const inside=pct>42;
+    const sub=(c.kassa||c.factuur)?('Kassa '+fmtE(c.kassa)+' · Facturen '+fmtE(c.factuur)):(c.cnt+' regel'+(c.cnt!==1?'s':''));
+    return '<div class="cat-item"><div class="br" style="grid-template-columns:180px 1fr 96px;"><span class="lbl" title="'+esc(c.category)+'">'+esc(c.category)+'</span><div class="track"><div class="fill" style="width:'+pct+'%;background:'+color+';">'+(inside?'<span class="fill-val">'+fmtMetric(c[metric])+'</span>':'')+'</div></div><span class="out-val" style="color:'+color+'">'+fmtMetric(c[metric])+'</span></div><div class="cat-sub-line">'+esc(sub)+'</div></div>';
+  }).join('');
+}
+function parseCatCsv(rawRows){
+  if(!rawRows.length)throw new Error('CSV is leeg.');
+  const s=rawRows[0];
+  const cDate=findCol(s,['date','datum']);if(!cDate)throw new Error('Geen datum-kolom gevonden.');
+  const cEmp=findCol(s,['employee','medewerker']);if(!cEmp)throw new Error('Geen employee-kolom gevonden.');
+  const cBron=findCol(s,['bron','source','kanaal']);
+  const cCat=findCol(s,['category','categorie']);if(!cCat)throw new Error('Geen category-kolom gevonden.');
+  const cAmt=findCol(s,['amount','aantal']);
+  const cPur=findCol(s,['purchase_price','purchase price','inkoop']);
+  const cSell=findCol(s,['selling_price','selling price','omzet']);
+  const cMgn=findCol(s,['margin','marge']);
+  const out=[];
+  for(const r of rawRows){
+    const dStr=(r[cDate]||'').trim();if(!dStr)continue;
+    const d=parseDate(dStr);if(!d)continue;
+    const sell=cSell?pn(r[cSell]):0;
+    const pur=cPur?pn(r[cPur]):0;
+    const mgn=cMgn?pn(r[cMgn]):(sell-pur);
+    out.push({_date:d,_y:d.getFullYear(),_m:d.getMonth()+1,_dom:d.getDate(),date:ymd(d),employee:(r[cEmp]||'Onbekend').trim(),bron:cBron?normBron(r[cBron]):null,category:(r[cCat]||'Overig').trim(),amount:cAmt?pn(r[cAmt]):0,purchase:pur,selling:sell,margin:mgn,mpct:sell!==0?(mgn/sell*100):0});
+  }
+  if(!out.length)throw new Error('Geen geldige categorie-rijen gevonden.');
+  return out;
+}
 // -- KASSA VS FACTUREN PER MEDEWERKER (ranglijst) ---------------------------
 function renderBronByEmp(){
   const card=document.getElementById('bronEmpCard');
@@ -872,7 +920,6 @@ function renderBronByEmp(){
   }).join('');
   renderLegend('bronEmpLegend',['Kassa','Facturen'],[BRON_COLORS.kassa,BRON_COLORS.factuur]);
 }
-
 function renderBars(){
   const rows=filtered();const byE=aggByEmp(rows).sort((a,b)=>b.selling-a.selling);
   const lbl=pLabel();
@@ -893,9 +940,7 @@ function renderBars(){
   const byM=[...byE].sort((a,b)=>b.mpct-a.mpct);const maxM=Math.max(1,...byM.map(e=>Math.abs(e.mpct)));
   document.getElementById('mgnBars').innerHTML=byM.map(e=>{const pct=(Math.abs(e.mpct)/maxM*100).toFixed(0);const fillColor=e.mpct<0?'#dc2626':e.mpct>=25?'#059669':e.mpct>=10?'#d97706':'#dc2626';const inside=pct>42;return'<div class="br"><span class="lbl" title="'+esc(e.employee)+'">'+esc(e.employee.split(' ')[0])+'</span><div class="track"><div class="fill" style="width:'+pct+'%;background:'+fillColor+';">'+(inside?'<span class="fill-val">'+e.mpct.toFixed(1)+'%</span>':'')+'</div></div><span class="out-val" style="color:'+fillColor+'">'+e.mpct.toFixed(1)+'%</span></div>';}).join('');
 }
-
-function renderTable(){let rows=filtered();const q=S.artSearch.toLowerCase().trim();if(q)rows=rows.filter(r=>(r.article+' '+r.description+' '+r.employee+' '+r.cat).toLowerCase().includes(q));const{col,dir}=S.artSort;const mult=dir==='asc'?1:-1;const sortVal=r=>{const ds=Math.abs(r.selling);if(col==='selling')return ds;if(col==='purchase')return Math.abs(r.purchase);if(col==='margin')return r.margin;if(col==='mpct')return r.mpct;if(col==='amount')return r.amount;if(col==='article')return r.article||'';if(col==='description')return r.description||'';return ds;};rows=[...rows].sort((a,b)=>{const co=['verkoop','consignatie','occasion','verzending'];const ca=co.indexOf(a.cat),cb=co.indexOf(b.cat);if(ca!==cb)return ca-cb;const av=sortVal(a),bv=sortVal(b);return(av<bv?-1:av>bv?1:0)*mult;});document.querySelectorAll('#artTable th.sortable').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===S.artSort.col)th.classList.add(S.artSort.dir==='asc'?'sort-asc':'sort-desc');});if(!rows.length){document.getElementById('artSub').textContent='0 products \u00B7 '+pLabel()+(S.empFilter!=='all'?' \u00B7 '+S.empFilter:'');document.getElementById('artBody').innerHTML='<tr><td colspan="8">No data</td></tr>';return;}const CO=['verkoop','consignatie','occasion','verzending'];const CM={verkoop:{label:'Sales',color:'#0f172a',bg:'',bdg:''},consignatie:{label:'Consignment buy-in',color:'#0d9488',bg:'#f0fdfa',bdg:'bdg-t'},occasion:{label:'Trade-in buy-in',color:'#7c3aed',bg:'#faf5ff',bdg:'bdg-p'},verzending:{label:'Shipping',color:'#d97706',bg:'#fffbeb',bdg:'bdg-y'}};const grouped={};CO.forEach(c=>grouped[c]=[]);rows.forEach(r=>{(grouped[r.cat]||grouped.verkoop).push(r);});CO.forEach(c=>{const bmap={};grouped[c].forEach(r=>{const k=r.article;if(bmap[k]){bmap[k].amount+=r.amount;bmap[k].purchase+=r.purchase;bmap[k].selling+=r.selling;bmap[k].margin+=r.margin;bmap[k]._cnt++;if(!bmap[k]._emps.includes(r.employee))bmap[k]._emps.push(r.employee);}else{bmap[k]={...r,_cnt:1,_emps:[r.employee]};}});grouped[c]=Object.values(bmap).map(r=>{r.mpct=r.selling!==0?(r.margin/r.selling*100):0;if(r._emps.length>1)r.employee=r._emps.map(e=>e.split(' ')[0]).join(', ');return r;});});const bTotal=CO.reduce((s,c)=>s+grouped[c].length,0);document.getElementById('artSub').textContent=bTotal+' products \u00B7 '+pLabel()+(S.empFilter!=='all'?' \u00B7 '+S.empFilter:'');let html='';CO.forEach(catKey=>{const grp=grouped[catKey];if(!grp.length)return;const meta=CM[catKey];const tS=catKey==='verkoop'?grp.reduce((s,r)=>s+r.selling,0):grp.reduce((s,r)=>s+Math.abs(r.selling),0);const tP=catKey==='verkoop'?grp.reduce((s,r)=>s+r.purchase,0):grp.reduce((s,r)=>s+Math.abs(r.purchase),0);const tM=grp.reduce((s,r)=>s+(catKey==='verkoop'?r.margin:0),0);const mp=tS>0&&catKey==='verkoop'?(tM/tS*100):null;html+='<tr style="background:'+(meta.bg||'var(--surface2)')+';border-top:2px solid '+meta.color+'22;"><td colspan="3" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+meta.label+' <span style="font-weight:500;color:var(--muted)">('+grp.length+' regel'+(grp.length!==1?'s':'')+')</span>'+(catKey!=='verkoop'?'<span style="font-size:10px;margin-left:8px;color:var(--muted2)">neutral</span>':'')+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">\u2014</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+fmtFull(tP)+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+fmtFull(tS)+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+(catKey==='verkoop'?fmtFull(tM):'\u2014')+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+(mp!==null?mp.toFixed(1)+'%':'\u2014')+'</td></tr>';grp.forEach(r=>{const dS=Math.abs(r.selling);const dP=Math.abs(r.purchase);const ec=empColor(r.employee);const mc=r.mpct>=25?'bdg-g':r.mpct>=10?'bdg-y':'bdg-r';html+='<tr style="'+(meta.bg?'background:'+meta.bg+';':'')+'opacity:.95;"><td><span style="font-size:11px;font-weight:700;color:'+ec+'">'+esc(r.employee.split(' ')[0])+'</span></td><td style="font-family:monospace;font-size:11px">'+esc((r.article||'').replace(/^EXCHANGE:/,''))+(r._cnt>1?' <span style="font-size:10px;padding:1px 4px;background:var(--surface2);border-radius:3px;color:var(--muted);font-family:var(--font);">\u00D7'+r._cnt+'</span>':'')+'</td><td>'+esc(r.description)+'</td><td class="num">'+r.amount+'</td><td class="num">'+fmtFull(dP)+'</td><td class="num" style="color:'+meta.color+';'+(catKey==='verkoop'?'':'font-style:italic;')+'"><b>'+fmtFull(dS)+'</b></td><td class="num">'+(catKey==='verkoop'?fmtFull(r.margin):'<span style="color:var(--muted2)">\u2014</span>')+'</td><td class="num">'+(catKey==='verkoop'?'<span class="bdg '+mc+'">'+r.mpct.toFixed(1)+'%</span>':'<span class="bdg '+meta.bdg+'">'+meta.label.split(' ')[0]+'</span>')+'</td></tr>';});});document.getElementById('artBody').innerHTML=html;}
-
+function renderTable(){let rows=filtered();const q=S.artSearch.toLowerCase().trim();if(q)rows=rows.filter(r=>(r.article+' '+r.description+' '+r.employee+' '+r.cat).toLowerCase().includes(q));const{col,dir}=S.artSort;const mult=dir==='asc'?1:-1;const sortVal=r=>{const ds=Math.abs(r.selling);if(col==='selling')return ds;if(col==='purchase')return Math.abs(r.purchase);if(col==='margin')return r.margin;if(col==='mpct')return r.mpct;if(col==='amount')return r.amount;if(col==='article')return r.article||'';if(col==='description')return r.description||'';return ds;};rows=[...rows].sort((a,b)=>{const co=['verkoop','consignatie','occasion','verzending'];const ca=co.indexOf(a.cat),cb=co.indexOf(b.cat);if(ca!==cb)return ca-cb;const av=sortVal(a),bv=sortVal(b);return(av<bv?-1:av>bv?1:0)*mult;});document.querySelectorAll('#artTable th.sortable').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===S.artSort.col)th.classList.add(S.artSort.dir==='asc'?'sort-asc':'sort-desc');});if(!rows.length){document.getElementById('artSub').textContent='0 products · '+pLabel()+(S.empFilter!=='all'?' · '+S.empFilter:'');document.getElementById('artBody').innerHTML='<tr><td colspan="8">No data</td></tr>';return;}const CO=['verkoop','consignatie','occasion','verzending'];const CM={verkoop:{label:'Sales',color:'#0f172a',bg:'',bdg:''},consignatie:{label:'Consignment buy-in',color:'#0d9488',bg:'#f0fdfa',bdg:'bdg-t'},occasion:{label:'Trade-in buy-in',color:'#7c3aed',bg:'#faf5ff',bdg:'bdg-p'},verzending:{label:'Shipping',color:'#d97706',bg:'#fffbeb',bdg:'bdg-y'}};const grouped={};CO.forEach(c=>grouped[c]=[]);rows.forEach(r=>{(grouped[r.cat]||grouped.verkoop).push(r);});CO.forEach(c=>{const bmap={};grouped[c].forEach(r=>{const k=r.article;if(bmap[k]){bmap[k].amount+=r.amount;bmap[k].purchase+=r.purchase;bmap[k].selling+=r.selling;bmap[k].margin+=r.margin;bmap[k]._cnt++;if(!bmap[k]._emps.includes(r.employee))bmap[k]._emps.push(r.employee);}else{bmap[k]={...r,_cnt:1,_emps:[r.employee]};}});grouped[c]=Object.values(bmap).map(r=>{r.mpct=r.selling!==0?(r.margin/r.selling*100):0;if(r._emps.length>1)r.employee=r._emps.map(e=>e.split(' ')[0]).join(', ');return r;});});const bTotal=CO.reduce((s,c)=>s+grouped[c].length,0);document.getElementById('artSub').textContent=bTotal+' products · '+pLabel()+(S.empFilter!=='all'?' · '+S.empFilter:'');let html='';CO.forEach(catKey=>{const grp=grouped[catKey];if(!grp.length)return;const meta=CM[catKey];const tS=catKey==='verkoop'?grp.reduce((s,r)=>s+r.selling,0):grp.reduce((s,r)=>s+Math.abs(r.selling),0);const tP=catKey==='verkoop'?grp.reduce((s,r)=>s+r.purchase,0):grp.reduce((s,r)=>s+Math.abs(r.purchase),0);const tM=grp.reduce((s,r)=>s+(catKey==='verkoop'?r.margin:0),0);const mp=tS>0&&catKey==='verkoop'?(tM/tS*100):null;html+='<tr style="background:'+(meta.bg||'var(--surface2)')+';border-top:2px solid '+meta.color+'22;"><td colspan="3" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+meta.label+' <span style="font-weight:500;color:var(--muted)">('+grp.length+' regel'+(grp.length!==1?'s':'')+')</span>'+(catKey!=='verkoop'?'<span style="font-size:10px;margin-left:8px;color:var(--muted2)">neutral</span>':'')+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">—</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+fmtFull(tP)+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+fmtFull(tS)+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+(catKey==='verkoop'?fmtFull(tM):'—')+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+(mp!==null?mp.toFixed(1)+'%':'—')+'</td></tr>';grp.forEach(r=>{const dS=Math.abs(r.selling);const dP=Math.abs(r.purchase);const ec=empColor(r.employee);const mc=r.mpct>=25?'bdg-g':r.mpct>=10?'bdg-y':'bdg-r';html+='<tr style="'+(meta.bg?'background:'+meta.bg+';':'')+'opacity:.95;"><td><span style="font-size:11px;font-weight:700;color:'+ec+'">'+esc(r.employee.split(' ')[0])+'</span></td><td style="font-family:monospace;font-size:11px">'+esc((r.article||'').replace(/^EXCHANGE:/,''))+(r._cnt>1?' <span style="font-size:10px;padding:1px 4px;background:var(--surface2);border-radius:3px;color:var(--muted);font-family:var(--font);">×'+r._cnt+'</span>':'')+'</td><td>'+esc(r.description)+'</td><td class="num">'+r.amount+'</td><td class="num">'+fmtFull(dP)+'</td><td class="num" style="color:'+meta.color+';'+(catKey==='verkoop'?'':'font-style:italic;')+'"><b>'+fmtFull(dS)+'</b></td><td class="num">'+(catKey==='verkoop'?fmtFull(r.margin):'<span style="color:var(--muted2)">—</span>')+'</td><td class="num">'+(catKey==='verkoop'?'<span class="bdg '+mc+'">'+r.mpct.toFixed(1)+'%</span>':'<span class="bdg '+meta.bdg+'">'+meta.label.split(' ')[0]+'</span>')+'</td></tr>';});});document.getElementById('artBody').innerHTML=html;}
 // -- TARGET LOADING ---------------------------------------------------------
 function loadTargets(){
   // Fallback targets (matching the sheet data)
@@ -912,11 +957,9 @@ function loadTargets(){
     // Running standalone (not in Apps Script) - fallback is already set
   }
 }
-
 // -- CSV PARSING ------------------------------------------------------------
-function parseCsv(rawRows){if(!rawRows.length)throw new Error('CSV is leeg.');const nk=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');const find=(obj,pats)=>{const keys=Object.keys(obj);for(const p of pats){const n=nk(p);for(const k of keys)if(nk(k)===n)return k;}for(const p of pats){const n=nk(p);if(!n)continue;for(const k of Object.keys(obj))if(nk(k).includes(n))return k;}return null;};const s=rawRows[0];const cDate=find(s,['date','datum']);if(!cDate)throw new Error('Geen datum-kolom gevonden.');const cEmp=find(s,['employee','medewerker','verkoper']);if(!cEmp)throw new Error('Geen employee-kolom gevonden.');const cArt=find(s,['article_number','article number','artikel','sku']);const cDesc=find(s,['description','omschrijving']);const cAmt=find(s,['amount','aantal','qty']);const cPur=find(s,['purchase_price','purchase price','inkoop','inkoopprijs']);const cSell=find(s,['selling_price','selling price','omzet','verkoopprijs','subtotal']);const cMgn=find(s,['margin','marge','profit']);const cBron=find(s,['bron','source','kanaal','channel','verkoopkanaal','document_type','documenttype','order_type','ordertype']);const isExchangeArt=art=>art.startsWith('EXCHANGE:');const isParentArt=art=>{if(!art||/^[-\s]*$/.test(art))return true;if(art.startsWith('EXCHANGE:'))return true;return/\s/.test(art);};const out=[];for(const r of rawRows){const rawArt=(r[cArt]||'').trim();const dStr=(r[cDate]||'').trim();if(!dStr)continue;const d=parseDate(dStr);if(!d)continue;const isParent=isParentArt(rawArt);const art=isParent&&!rawArt.startsWith('EXCHANGE:')?('EXCHANGE:'+rawArt):rawArt;const sell_=pn(r[cSell]),amt_=cAmt?pn(r[cAmt]):1;if(isExchangeArt(art)&&Math.abs(sell_)===0&&amt_===0)continue;const iso=isoWeek(d);const sell=pn(r[cSell]);const pur=cPur?pn(r[cPur]):0;const mgn=cMgn?pn(r[cMgn]):(sell-pur);const rowObj={_date:d,_y:d.getFullYear(),_m:d.getMonth()+1,_dom:d.getDate(),_dow:d.getDay(),_w:iso.week,_wy:iso.year,date:ymd(d),employee:(r[cEmp]||'Onbekend').trim(),article:art,description:cDesc?(r[cDesc]||'').trim():'',amount:cAmt?pn(r[cAmt]):1,purchase:pur,selling:sell,margin:mgn,isCredit:(cAmt?pn(r[cAmt]):1)<0||sell<0,mpct:sell!==0?(mgn/sell*100):0,bron:cBron?normBron(r[cBron]):null};rowObj.cat=categorize(rowObj);applyUsedCFix(rowObj);if(rowObj.amount<0&&rowObj.selling===0){rowObj.purchase=0;rowObj.margin=0;rowObj.mpct=0;}out.push(rowObj);}const merged=[];out.forEach((r,idx)=>{if(!isExchangeArt(r.article)){merged.push(r);return;}const xSell=r.selling,xPur=r.purchase,xName=r.article.replace(/^EXCHANGE:/,'')||r.description;let ti=-1;for(let j=merged.length-1;j>=0;j--){if(merged[j].amount>0&&!merged[j]._merged){ti=j;break;}}if(ti===-1){for(let j=idx+1;j<out.length;j++){if(!isExchangeArt(out[j].article)&&out[j].amount>0&&!out[j]._merged){out[j]._pendingExchange={sell:xSell,pur:xPur,name:xName};return;}}}if(ti>=0){const t=merged[ti];const ns=Math.round((xSell+t.selling)*100)/100;const np=Math.round((xPur+t.purchase)*100)/100;t.description=xName+' \u203A '+t.description;t.selling=ns;t.purchase=np;t.margin=Math.round((ns-np)*100)/100;t.mpct=ns!==0?(t.margin/ns*100):0;t._merged=true;}else{merged.push({...r,article:'EXCHANGE',description:xName,purchase:xSell,margin:0,mpct:0});}});merged.forEach(r=>{if(!r._pendingExchange)return;const p=r._pendingExchange;const ns=Math.round((p.sell+r.selling)*100)/100;const np=Math.round((p.pur+r.purchase)*100)/100;r.description=p.name+' \u203A '+r.description;r.selling=ns;r.purchase=np;r.margin=Math.round((ns-np)*100)/100;r.mpct=ns!==0?(r.margin/ns*100):0;delete r._pendingExchange;});const clean=merged.filter(r=>Math.abs(r.amount)<=100);
+function parseCsv(rawRows){if(!rawRows.length)throw new Error('CSV is leeg.');const find=(obj,pats)=>findCol(obj,pats);const s=rawRows[0];const cDate=find(s,['date','datum']);if(!cDate)throw new Error('Geen datum-kolom gevonden.');const cEmp=find(s,['employee','medewerker','verkoper']);if(!cEmp)throw new Error('Geen employee-kolom gevonden.');const cArt=find(s,['article_number','article number','artikel','sku']);const cDesc=find(s,['description','omschrijving']);const cAmt=find(s,['amount','aantal','qty']);const cPur=find(s,['purchase_price','purchase price','inkoop','inkoopprijs']);const cSell=find(s,['selling_price','selling price','omzet','verkoopprijs','subtotal']);const cMgn=find(s,['margin','marge','profit']);const cBron=find(s,['bron','source','kanaal','channel','verkoopkanaal','document_type','documenttype','order_type','ordertype']);const isExchangeArt=art=>art.startsWith('EXCHANGE:');const isParentArt=art=>{if(!art||/^[-\s]*$/.test(art))return true;if(art.startsWith('EXCHANGE:'))return true;return/\s/.test(art);};const out=[];for(const r of rawRows){const rawArt=(r[cArt]||'').trim();const dStr=(r[cDate]||'').trim();if(!dStr)continue;const d=parseDate(dStr);if(!d)continue;const isParent=isParentArt(rawArt);const art=isParent&&!rawArt.startsWith('EXCHANGE:')?('EXCHANGE:'+rawArt):rawArt;const sell_=pn(r[cSell]),amt_=cAmt?pn(r[cAmt]):1;if(isExchangeArt(art)&&Math.abs(sell_)===0&&amt_===0)continue;const iso=isoWeek(d);const sell=pn(r[cSell]);const pur=cPur?pn(r[cPur]):0;const mgn=cMgn?pn(r[cMgn]):(sell-pur);const rowObj={_date:d,_y:d.getFullYear(),_m:d.getMonth()+1,_dom:d.getDate(),_dow:d.getDay(),_w:iso.week,_wy:iso.year,date:ymd(d),employee:(r[cEmp]||'Onbekend').trim(),article:art,description:cDesc?(r[cDesc]||'').trim():'',amount:cAmt?pn(r[cAmt]):1,purchase:pur,selling:sell,margin:mgn,isCredit:(cAmt?pn(r[cAmt]):1)<0||sell<0,mpct:sell!==0?(mgn/sell*100):0,bron:cBron?normBron(r[cBron]):null};rowObj.cat=categorize(rowObj);applyUsedCFix(rowObj);if(rowObj.amount<0&&rowObj.selling===0){rowObj.purchase=0;rowObj.margin=0;rowObj.mpct=0;}out.push(rowObj);}const merged=[];out.forEach((r,idx)=>{if(!isExchangeArt(r.article)){merged.push(r);return;}const xSell=r.selling,xPur=r.purchase,xName=r.article.replace(/^EXCHANGE:/,'')||r.description;let ti=-1;for(let j=merged.length-1;j>=0;j--){if(merged[j].amount>0&&!merged[j]._merged){ti=j;break;}}if(ti===-1){for(let j=idx+1;j<out.length;j++){if(!isExchangeArt(out[j].article)&&out[j].amount>0&&!out[j]._merged){out[j]._pendingExchange={sell:xSell,pur:xPur,name:xName};return;}}}if(ti>=0){const t=merged[ti];const ns=Math.round((xSell+t.selling)*100)/100;const np=Math.round((xPur+t.purchase)*100)/100;t.description=xName+' › '+t.description;t.selling=ns;t.purchase=np;t.margin=Math.round((ns-np)*100)/100;t.mpct=ns!==0?(t.margin/ns*100):0;t._merged=true;}else{merged.push({...r,article:'EXCHANGE',description:xName,purchase:xSell,margin:0,mpct:0});}});merged.forEach(r=>{if(!r._pendingExchange)return;const p=r._pendingExchange;const ns=Math.round((p.sell+r.selling)*100)/100;const np=Math.round((p.pur+r.purchase)*100)/100;r.description=p.name+' › '+r.description;r.selling=ns;r.purchase=np;r.margin=Math.round((ns-np)*100)/100;r.mpct=ns!==0?(r.margin/ns*100):0;delete r._pendingExchange;});const clean=merged.filter(r=>Math.abs(r.amount)<=100);
 if(!clean.length)throw new Error('Geen geldige rijen gevonden.');return clean;}
-
 // -- EVENT WIRING -----------------------------------------------------------
 const gateFile=document.getElementById('gateFile');
 const gateDrop=document.getElementById('gateDrop');
@@ -926,7 +969,19 @@ gateFile.onchange=e=>{if(e.target.files[0])doFile(e.target.files[0]);};
 gateDrop.ondragover=e=>{e.preventDefault();gateDrop.classList.add('dragover');};
 gateDrop.ondragleave=()=>{gateDrop.classList.remove('dragover');};
 gateDrop.ondrop=e=>{e.preventDefault();gateDrop.classList.remove('dragover');if(e.dataTransfer.files[0])doFile(e.dataTransfer.files[0]);};
-document.getElementById('btnLogout').onclick=()=>{S.rows=[];S.empFilter='all';S.targets={};document.getElementById('gate').classList.remove('hidden');document.getElementById('app').classList.remove('active');};
+const catFileInput=document.getElementById('catFile');
+const catUploadBtn=document.getElementById('catUploadBtn');
+const doCatFile=file=>{
+  Papa.parse(file,{header:true,skipEmptyLines:true,transformHeader:h=>h.trim(),complete:res=>{
+    try{
+      S.catRows=parseCatCsv(res.data);
+      if(catUploadBtn)catUploadBtn.classList.add('loaded');
+      render();
+    }catch(e){alert('Categorieën CSV kon niet worden geladen: '+e.message);}
+  },error:e=>alert('Categorieën CSV kon niet worden geladen: '+e.message)});
+};
+if(catFileInput)catFileInput.onchange=e=>{if(e.target.files[0])doCatFile(e.target.files[0]);};
+document.getElementById('btnLogout').onclick=()=>{S.rows=[];S.catRows=[];S.empFilter='all';S.targets={};if(catUploadBtn)catUploadBtn.classList.remove('loaded');document.getElementById('gate').classList.remove('hidden');document.getElementById('app').classList.remove('active');};
 document.querySelectorAll('.grain-chip').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.grain-chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   S.grain=b.dataset.grain;
@@ -939,7 +994,8 @@ document.getElementById('navPrev').onclick=()=>stepNav(-1);
 document.getElementById('navNext').onclick=()=>stepNav(1);
 document.getElementById('empTabs').onclick=e=>{const btn=e.target.closest('.emp-tab');if(!btn)return;S.empFilter=btn.dataset.emp;render();};
 document.querySelectorAll('.staff-sort-btn').forEach(btn=>btn.onclick=()=>{S.staffSort=btn.dataset.sort;document.querySelectorAll('.staff-sort-btn').forEach(b=>{b.style.background=b===btn?'var(--accent)':'transparent';b.style.color=b===btn?'#fff':'var(--muted)';});renderStaffBanners();});
-document.querySelectorAll('.bron-sort-btn').forEach(btn=>btn.onclick=()=>{S.bronEmpSort=btn.dataset.sort;document.querySelectorAll('.bron-sort-btn').forEach(b=>b.classList.toggle('active',b===btn));renderBronByEmp();});
+document.querySelectorAll('.bron-sort-btn:not(.cat-sort-btn)').forEach(btn=>btn.onclick=()=>{S.bronEmpSort=btn.dataset.sort;document.querySelectorAll('.bron-sort-btn:not(.cat-sort-btn)').forEach(b=>b.classList.toggle('active',b===btn));renderBronByEmp();});
+document.querySelectorAll('.cat-sort-btn').forEach(btn=>btn.onclick=()=>{S.catMetric=btn.dataset.metric;document.querySelectorAll('.cat-sort-btn').forEach(b=>b.classList.toggle('active',b===btn));renderCategories();});
 let _st;document.getElementById('artSearch').oninput=e=>{clearTimeout(_st);_st=setTimeout(()=>{S.artSearch=e.target.value;renderTable();},120);};
 document.querySelectorAll('#artTable th.sortable').forEach(th=>th.onclick=()=>{const c=th.dataset.sort;S.artSort.dir=S.artSort.col===c?(S.artSort.dir==='asc'?'desc':'asc'):'desc';S.artSort.col=c;renderTable();});
 function stepNav(d){
@@ -956,5 +1012,4 @@ document.head.appendChild(st);
 </script>
 </body>
 </html>
-
 
