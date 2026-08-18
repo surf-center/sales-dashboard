@@ -44,6 +44,10 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
 .period-row--bottom{justify-content:center;gap:16px;border-top:1px solid var(--border);padding-top:12px;}
 .grain-chips{display:flex;gap:2px;background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .grain-chip{padding:7px 16px;font-size:12px;font-weight:600;color:var(--muted);border:none;background:transparent;border-radius:7px;cursor:pointer;}
+.subp-chip{padding:5px 13px;font-size:11px;font-weight:600;color:var(--muted);border:none;background:transparent;border-radius:6px;cursor:pointer;}
+.subp-chip.active{background:var(--accent);color:#fff;}
+.subp-pick{padding:5px 11px;font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--border);background:var(--surface);border-radius:6px;cursor:pointer;}
+.subp-pick.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .grain-chip.active{background:var(--accent);color:#fff;}
 .period-nav{display:flex;gap:7px;align-items:center;}
 .nav-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--muted);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;}
@@ -139,7 +143,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
 .bron-sort-btn.active{background:var(--accent);color:#fff;}
 .chip-action-btn{padding:6px 14px;font-size:12px;font-weight:600;border:1.5px solid var(--blue);border-radius:99px;cursor:pointer;background:#fff;color:var(--blue);}
 .chip-action-btn:hover{background:var(--blue);color:#fff;}
-/* -- Categorieën ------------------------------------------ */
+/* -- Categorie√´n ------------------------------------------ */
 .cat-item{padding:9px 0;border-bottom:1px solid var(--border);}
 .cat-item:last-child{border-bottom:none;}
 .cat-sub-line{padding-left:190px;font-size:10px;color:var(--muted);margin-top:3px;}
@@ -149,7 +153,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
 <div id="loginGate" style="position:fixed;inset:0;z-index:110;display:flex;align-items:center;justify-content:center;padding:24px;">
   <div class="gate-card">
     <img src="logo.png" alt="Surfcenter" class="gate-logo" onerror="this.style.display='none';">
-    <div class="gate-title">Surfcenter Analytics</div>
+    <div class="gate-title">Analytics</div>
     <div class="gate-sub">Voer je toegangscode in</div>
     <form id="loginForm" autocomplete="off" style="display:flex;flex-direction:column;align-items:center;gap:14px;">
       <input type="password" id="loginCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="&#9679;&#9679;&#9679;&#9679;" style="width:140px;text-align:center;font-size:22px;letter-spacing:6px;padding:12px 10px;border:1px solid var(--border);border-radius:11px;outline:none;font-weight:700;">
@@ -161,7 +165,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
 <div id="gate" class="hidden">
   <div class="gate-card">
     <img src="logo.png" alt="Surfcenter" class="gate-logo" onerror="this.style.display='none';">
-    <div class="gate-title">Surfcenter Analytics</div>
+    <div class="gate-title">Analytics</div>
     <div class="gate-sub">Laad je margins CSV om verder te gaan</div>
     <label class="gate-drop" id="gateDrop">
       <input type="file" id="gateFile" accept=".csv,text/csv" style="display:none;">
@@ -175,7 +179,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
   <header>
     <div class="hdr-brand">
       <img src="logo.png" alt="Surfcenter" class="hdr-logo" onerror="this.style.display='none';">
-      <div class="hdr-title">Surfcenter Analytics</div>
+      <div class="hdr-title">Analytics</div>
     </div>
     <div class="hdr-spacer"></div>
     <div style="display:flex;gap:7px;align-items:center;">
@@ -204,6 +208,14 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
           <div class="period-lbl" id="periodLabel">&#8212;</div>
           <button class="nav-btn" id="navNext">&#8250;</button>
         </div>
+      </div>
+      <div id="subPeriodRow" style="display:none;margin-top:10px;flex-wrap:wrap;align-items:center;gap:8px;">
+        <div class="grain-chips" id="subPeriodChips">
+          <button class="subp-chip active" data-sub="">Hele maand</button>
+          <button class="subp-chip" data-sub="week">Per week</button>
+          <button class="subp-chip" data-sub="day">Per dag</button>
+        </div>
+        <div id="subPeriodPicker" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"></div>
       </div>
     </div>
     <div id="trendSelectors" class="card" style="display:none;margin-bottom:20px;padding:16px 18px;">
@@ -278,6 +290,10 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       <div class="kpi">
         <div class="kpi-lbl">AOV</div>
         <div class="kpi-val" id="kAov">&#8212;</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Credits</div>
+        <div class="kpi-val" id="kCredits">&#8212;</div>
       </div>
     </div>
     <!-- KPI detail panel -->
@@ -364,10 +380,10 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       <div id="bronChartWrap" class="chart-wrap" style="display:none;"><canvas id="bronChart"></canvas></div>
       <div class="legend" id="bronLegend"></div>
     </div>
-    <!-- -- CATEGORIEËN ------------------------------------------ -->
+    <!-- -- CATEGORIE√ãN ------------------------------------------ -->
     <div class="card" id="catCard" style="display:none;">
       <div class="card-head">
-        <div><div class="card-title">Categorieën</div><div class="card-sub" id="catSub">&#8212;</div></div>
+        <div><div class="card-title">Categorie√´n</div><div class="card-sub" id="catSub">&#8212;</div></div>
       </div>
       <div id="catRows"></div>
       <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Categorie-omzet zoals gerapporteerd door Count-IT (per categorie-groep, aggregaat). Percentage per categorie is het aandeel in de totale Sales-omzet van de gekozen periode.</div>
@@ -381,9 +397,9 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
         <div class="chart-wrap" style="height:220px;"><canvas id="bucketChart"></canvas></div>
         <div id="bucketRows"></div>
       </div>
-      <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Gebundeld op basis van Count-IT's eigen productgroep-taxonomie. Overige groepen (diversen, merchandise, kleding, shipping, rental, clinics/lessen, aanbetalingen, legacy/onbekende groepen) tellen hier niet in mee &mdash; totaal kan daardoor lager zijn dan de Sales-omzet in de Categorieën-kaart hierboven.</div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Gebundeld op basis van Count-IT's eigen productgroep-taxonomie. Overige groepen (diversen, merchandise, kleding, shipping, rental, clinics/lessen, aanbetalingen, legacy/onbekende groepen) tellen hier niet in mee &mdash; totaal kan daardoor lager zijn dan de Sales-omzet in de Categorie√´n-kaart hierboven.</div>
     </div>
-    <!-- -- MERKEN (aggregaat rechtstreeks uit Count-IT, net als Categorieën) -- -->
+    <!-- -- MERKEN (aggregaat rechtstreeks uit Count-IT, net als Categorie√´n) -- -->
     <div class="card" id="brandCard" style="display:none;">
       <div class="card-head">
         <div><div class="card-title">Merken</div><div class="card-sub" id="brandSub">&#8212;</div></div>
@@ -392,7 +408,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
         <div class="chart-wrap" style="height:220px;"><canvas id="brandChart"></canvas></div>
         <div id="brandRows"></div>
       </div>
-      <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Merk-omzet zoals gerapporteerd door Count-IT (aggregaat, geen artikel-koppeling nodig). Geen uitsplitsing naar productgroep mogelijk — Count-IT groepeert maar op één dimensie per keer.</div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">Merk-omzet zoals gerapporteerd door Count-IT (aggregaat, geen artikel-koppeling nodig). Geen uitsplitsing naar productgroep mogelijk ‚Äî Count-IT groepeert maar op √©√©n dimensie per keer.</div>
     </div>
     <!-- -- YEAR GRAIN: extra charts (margin EUR and margin %) -- -->
     <div id="yearChartsSection" style="display:none;">
@@ -492,7 +508,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
 (function(){
 'use strict';
 // Charts get fully destroyed+recreated on every render() (grain/year/employee
-// click) rather than updated in place — with default animation on, that
+// click) rather than updated in place ‚Äî with default animation on, that
 // pays Chart.js's full grow-in animation setup cost each time for no visual
 // benefit (the chart is brand new, there's nothing to animate FROM). Off.
 if(window.Chart&&Chart.defaults)Chart.defaults.animation=false;
@@ -505,8 +521,8 @@ const BRON_COLORS={kassa:'#2563eb',factuur:'#0d9488'};
 const S={rows:[],grain:'month',year:2026,month:6,artSearch:'',artSort:{col:'selling',dir:'desc'},staffSort:'selling',
   rangeFrom:{year:2026,month:1},rangeTo:{year:2026,month:6},cumulative:false,
   targets:{},bronEmpSort:'total',catRows:[],
-  selectedEmps:null,trendYears:null,brandRows:[],brandFilter:'',yoyYears:null,categoryFilter:''};
-const EUR='€';
+  selectedEmps:null,trendYears:null,brandRows:[],brandFilter:'',yoyYears:null,categoryFilter:'',subPeriod:null,subPeriodMode:''};
+const EUR='‚Ç¨';
 const fmtE=n=>{const v=Math.round(n||0);return(v<0?'-'+EUR:EUR)+Math.abs(v).toLocaleString('nl-NL');};
 const fmtFull=n=>{const v=n||0;const abs=Math.abs(v);return(v<0?'-'+EUR:EUR)+abs.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});};
 const esc=s=>(s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -519,10 +535,10 @@ function parseDate(s){if(!s)return null;const m=String(s).trim().match(/^(\d{4})
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function empColor(name){const emps=getEmps();return COLORS[emps.indexOf(name)%COLORS.length];}
 // getEmps/allDataYears only depend on S.rows, which is REPLACED (new array,
-// never mutated in place) on every CSV upload/logout — so a reference check
+// never mutated in place) on every CSV upload/logout ‚Äî so a reference check
 // on S.rows is a safe, zero-risk cache key. Without this, a single render()
 // pass re-scans the full (13k+ row) dataset a dozen+ times just to rebuild
-// the same employee/year lists over and over — the main cause of sluggish
+// the same employee/year lists over and over ‚Äî the main cause of sluggish
 // clicks on real-sized data.
 let _empsCacheRows=null,_empsCache=null;
 function getEmps(){
@@ -539,10 +555,10 @@ function allDataYears(){
   return _yearsCache;
 }
 function getEmpsInPeriod(){return[...new Set(S.rows.filter(matchPeriod).map(r=>r.employee))].sort();}
-// Unified multi-select employee filter — applies everywhere (Maand/Jaar/Range/Trend).
+// Unified multi-select employee filter ‚Äî applies everywhere (Maand/Jaar/Range/Trend).
 // null = untouched, defaults to everyone. Once the user interacts (individual
-// toggle or the select-all/deselect-all button) it's always an explicit array —
-// which CAN be empty (deliberately deselected everyone → show nothing).
+// toggle or the select-all/deselect-all button) it's always an explicit array ‚Äî
+// which CAN be empty (deliberately deselected everyone ‚Üí show nothing).
 let _activeEmpsKey=null,_activeEmpsCache=null;
 function activeSelectedEmps(){
   const all=getEmps();
@@ -557,11 +573,25 @@ function isSingleSelected(){return activeSelectedEmps().length===1;}
 function selectedLabel(){
   const sel=activeSelectedEmps();
   if(sel.length===getEmps().length)return'';
-  return' · '+sel.map(e=>e.split(' ')[0]).join(', ');
+  return' ¬∑ '+sel.map(e=>e.split(' ')[0]).join(', ');
+}
+let _mhddRows=null,_mhddKey=null,_mhddCache=false;
+function monthHasDayData(){
+  const key=S.year+'-'+S.month;
+  if(_mhddRows===S.rows&&_mhddKey===key)return _mhddCache;
+  _mhddCache=S.rows.some(r=>r._y===S.year&&r._m===S.month&&r._dom>1);
+  _mhddRows=S.rows;_mhddKey=key;
+  return _mhddCache;
+}
+function matchSubPeriod(r){
+  if(!S.subPeriod)return true;
+  if(S.subPeriod.type==='day')return r._dom===S.subPeriod.day;
+  if(S.subPeriod.type==='week')return r._w===S.subPeriod.week&&r._wy===S.subPeriod.year;
+  return true;
 }
 function matchPeriod(r){
   if(S.grain==='trend') return activeTrendYearsList().includes(r._y);
-  if(S.grain==='month') return r._y===S.year&&r._m===S.month;
+  if(S.grain==='month') return r._y===S.year&&r._m===S.month&&matchSubPeriod(r);
   if(S.grain==='year')  return r._y===S.year;
   if(S.grain==='range'){
     const ym=r._y*100+r._m;
@@ -571,14 +601,14 @@ function matchPeriod(r){
   }
   return true;
 }
-// filtered() is called ~10x per render() pass by different cards — cache the
+// filtered() is called ~10x per render() pass by different cards ‚Äî cache the
 // result keyed on everything that can change its output, so repeat calls in
 // the same pass (or between unrelated UI updates like typing a search query)
 // skip the O(n) scan entirely when nothing relevant has changed.
 let _filteredKey=null,_filteredCache=null;
 function filtered(){
   const emps=activeSelectedEmps();
-  const key=[S.grain,S.year,S.month,S.rangeFrom&&S.rangeFrom.year,S.rangeFrom&&S.rangeFrom.month,S.rangeTo&&S.rangeTo.year,S.rangeTo&&S.rangeTo.month,S.trendYears&&S.trendYears.join(','),emps.join(''),S.rows.length].join('|');
+  const key=[S.grain,S.year,S.month,S.rangeFrom&&S.rangeFrom.year,S.rangeFrom&&S.rangeFrom.month,S.rangeTo&&S.rangeTo.year,S.rangeTo&&S.rangeTo.month,S.trendYears&&S.trendYears.join(','),emps.join(''),S.rows.length,S.subPeriod&&JSON.stringify(S.subPeriod)].join('|');
   if(_filteredKey===key&&_filteredCacheRows===S.rows)return _filteredCache;
   _filteredCache=S.rows.filter(r=>matchPeriod(r)&&emps.includes(r.employee));
   _filteredKey=key;_filteredCacheRows=S.rows;
@@ -652,16 +682,21 @@ function aggBron(rows){
 function pLabel(){
   if(S.grain==='trend'){
     const yrs=[...new Set(S.rows.map(r=>r._y))].sort();
-    return yrs.length===1?''+yrs[0]:yrs[0]+' – '+yrs[yrs.length-1];
+    return yrs.length===1?''+yrs[0]:yrs[0]+' ‚Äì '+yrs[yrs.length-1];
   }
   if(S.grain==='year')  return''+S.year;
-  if(S.grain==='month') return MONTHS[S.month-1]+' '+S.year;
+  if(S.grain==='month'){
+    let base=MONTHS[S.month-1]+' '+S.year;
+    if(S.subPeriod&&S.subPeriod.type==='day')base+=' ¬∑ dag '+S.subPeriod.day;
+    else if(S.subPeriod&&S.subPeriod.type==='week')base+=' ¬∑ week '+S.subPeriod.week;
+    return base;
+  }
   if(S.grain==='range'){
     const f=MONTHS_S[S.rangeFrom.month-1]+' '+S.rangeFrom.year;
     const t=MONTHS_S[S.rangeTo.month-1]+' '+S.rangeTo.year;
-    return f+' – '+t;
+    return f+' ‚Äì '+t;
   }
-  return'—';
+  return'‚Äî';
 }
 const charts={};
 function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
@@ -694,11 +729,12 @@ function render(){
 }
 function renderPicker(){
   const host=document.getElementById('periodPicker');host.innerHTML='';
+  if(S.grain!=='month'){const sp=document.getElementById('subPeriodRow');if(sp)sp.style.display='none';}
   if(S.grain==='trend')return;
   const years=[...new Set(S.rows.map(r=>r._y))].sort((a,b)=>a-b);
   const mk=(entries,sel,cb)=>{const el=document.createElement('select');el.className='period-select';entries.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;if(String(v)===String(sel))o.selected=true;el.appendChild(o);});el.onchange=e=>cb(e.target.value);return el;};
   if(S.grain==='year'){if(years.length)host.appendChild(mk(years.map(y=>[y,y]),S.year,v=>{S.year=+v;render();}));}
-  else if(S.grain==='month'){host.appendChild(mk(MONTHS.map((n,i)=>[i+1,n]),S.month,v=>{S.month=+v;render();}));if(years.length)host.appendChild(mk(years.map(y=>[y,y]),S.year,v=>{S.year=+v;render();}));}
+  else if(S.grain==='month'){host.appendChild(mk(MONTHS.map((n,i)=>[i+1,n]),S.month,v=>{S.month=+v;S.subPeriod=null;S.subPeriodMode='';render();}));if(years.length)host.appendChild(mk(years.map(y=>[y,y]),S.year,v=>{S.year=+v;S.subPeriod=null;S.subPeriodMode='';render();}));renderSubPeriodRow();}
   else if(S.grain==='range'){
     const fl=document.createElement('span');fl.textContent='Van';fl.style.cssText='font-size:12px;font-weight:600;color:var(--muted);';host.appendChild(fl);
     host.appendChild(mk(MONTHS.map((n,i)=>[i+1,n]),S.rangeFrom.month,v=>{S.rangeFrom.month=+v;render();}));
@@ -708,6 +744,33 @@ function renderPicker(){
     host.appendChild(mk(years.map(y=>[y,y]),S.rangeTo.year,v=>{S.rangeTo.year=+v;render();}));
   }
 }
+function renderSubPeriodRow(){
+  const rowEl=document.getElementById('subPeriodRow');
+  if(!rowEl)return;
+  if(!monthHasDayData()){rowEl.style.display='none';return;}
+  rowEl.style.display='flex';
+  const mode=S.subPeriodMode;
+  document.querySelectorAll('#subPeriodChips .subp-chip').forEach(b=>b.classList.toggle('active',b.dataset.sub===mode));
+  const pick=document.getElementById('subPeriodPicker');pick.innerHTML='';
+  const monthRows=S.rows.filter(r=>r._y===S.year&&r._m===S.month);
+  if(mode==='day'){
+    const days=[...new Set(monthRows.map(r=>r._dom))].sort((a,b)=>a-b);
+    days.forEach(d=>{
+      const btn=document.createElement('button');btn.className='subp-pick';btn.textContent=d;
+      if(S.subPeriod&&S.subPeriod.day===d)btn.classList.add('active');
+      btn.onclick=()=>{S.subPeriod={type:'day',day:d};render();};
+      pick.appendChild(btn);
+    });
+  }else if(mode==='week'){
+    const weeks=[...new Map(monthRows.map(r=>[r._wy+'-'+r._w,{year:r._wy,week:r._w}])).values()].sort((a,b)=>a.year*100-b.year*100||a.week-b.week);
+    weeks.forEach(w=>{
+      const btn=document.createElement('button');btn.className='subp-pick';btn.textContent='Week '+w.week;
+      if(S.subPeriod&&S.subPeriod.week===w.week&&S.subPeriod.year===w.year)btn.classList.add('active');
+      btn.onclick=()=>{S.subPeriod={type:'week',week:w.week,year:w.year};render();};
+      pick.appendChild(btn);
+    });
+  }
+}
 window.toggleKpiDetail=function(id,btn){
   const ALL=['kRevDetail','kMarginDetail','kLinesDetail'];
   const BTNS=['kRevBtn','kMarginBtn','kLinesBtn'];
@@ -715,7 +778,7 @@ window.toggleKpiDetail=function(id,btn){
   if(!el)return;
   const wasOpen=el.style.display!=='none'&&el.style.display!=='';
   ALL.forEach((sid,i)=>{const d=document.getElementById(sid);if(d)d.style.display='none';const b=document.getElementById(BTNS[i]);if(b){b.classList.remove('open');b.textContent='+';}});
-  if(!wasOpen){el.style.display='block';if(btn){btn.classList.add('open');btn.textContent='×';}if(id==='kLinesDetail'&&typeof renderTable==='function')renderTable();}
+  if(!wasOpen){el.style.display='block';if(btn){btn.classList.add('open');btn.textContent='√ó';}if(id==='kLinesDetail'&&typeof renderTable==='function')renderTable();}
   const panel=document.getElementById('kpiPanel');
   if(panel){const anyOpen=ALL.some(sid=>{const d=document.getElementById(sid);return d&&d.style.display!=='none'&&d.style.display!=='';});panel.style.display=anyOpen?'block':'none';}
 };
@@ -727,15 +790,17 @@ function renderKpis(){
   document.getElementById('kLines').textContent=a.cats.verkoop.qty;
   const b=hasBronData()?aggBron(rows):null;
   const cnt=b?b.kassa.cnt+b.factuur.cnt:0;
-  document.getElementById('kTransacties').textContent=cnt?cnt.toLocaleString('nl-NL'):'—';
-  document.getElementById('kAov').textContent=cnt?fmtE(a.selling/cnt):'—';
+  document.getElementById('kTransacties').textContent=cnt?cnt.toLocaleString('nl-NL'):'‚Äî';
+  document.getElementById('kAov').textContent=cnt?fmtE(a.selling/cnt):'‚Äî';
+  const creditAmt=rows.filter(r=>r.cat==='verkoop'&&r.selling<0).reduce((s,r)=>s+r.selling,0);
+  document.getElementById('kCredits').textContent=fmtE(creditAmt);
   renderBreakdownCards(a.cats,rows);
 }
 function renderBreakdownCards(cats,rows){
   const vk=cats.verkoop,sh=cats.verzending,co=cats.consignatie,oc=cats.occasion;
   const ctSellRaw=rows.reduce((s,r)=>s+r.selling,0);
   const ctSell=ctSellRaw||null;
-  const rLine=(label,val,opts={})=>{const{bold,color,sep,prefix}=opts;const clr=color||(bold?'var(--text)':'var(--text2)');return`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:${bold?'8':'5'}px 0;${sep?'border-top:2px solid var(--border);margin-top:6px;padding-top:10px;':''}"><div style="font-size:${bold?'12':'11'}px;font-weight:${bold?700:500};color:${clr};">${prefix||''}${label}</div><div style="font-size:${bold?'15':'12'}px;font-weight:${bold?800:600};color:${clr};font-variant-numeric:tabular-nums;">${val!=null?fmtFull(val):'—'}</div></div>`;};
+  const rLine=(label,val,opts={})=>{const{bold,color,sep,prefix}=opts;const clr=color||(bold?'var(--text)':'var(--text2)');return`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:${bold?'8':'5'}px 0;${sep?'border-top:2px solid var(--border);margin-top:6px;padding-top:10px;':''}"><div style="font-size:${bold?'12':'11'}px;font-weight:${bold?700:500};color:${clr};">${prefix||''}${label}</div><div style="font-size:${bold?'15':'12'}px;font-weight:${bold?800:600};color:${clr};font-variant-numeric:tabular-nums;">${val!=null?fmtFull(val):'‚Äî'}</div></div>`;};
   let revHtml='';
   if(ctSell!=null){revHtml+=`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 10px;border-bottom:1px dashed var(--border);margin-bottom:6px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);">Revenue</div><div style="font-size:18px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;">${fmtFull(ctSell)}</div></div>`;}
   if(co.sell>0)revHtml+=rLine('Consignatie buy-backs',co.sell,{color:'var(--teal)',prefix:'+ '});
@@ -747,12 +812,12 @@ function renderBreakdownCards(cats,rows){
   const kassaSell=bronRows.filter(r=>r.bron==='kassa').reduce((s,r)=>s+r.selling,0);
   const factuurSell=bronRows.filter(r=>r.bron==='factuur').reduce((s,r)=>s+r.selling,0);
   if(kassaSell||factuurSell){
-    revHtml+=rLine('↳ Kassa',kassaSell,{color:BRON_COLORS.kassa});
-    revHtml+=rLine('↳ Facturen',factuurSell,{color:BRON_COLORS.factuur});
+    revHtml+=rLine('‚Ü≥ Kassa',kassaSell,{color:BRON_COLORS.kassa});
+    revHtml+=rLine('‚Ü≥ Facturen',factuurSell,{color:BRON_COLORS.factuur});
   }
   const revEl=document.getElementById('kRevDetail');
   if(revEl){const existing=revEl.querySelector('div[data-rev-rows]');if(existing){existing.innerHTML=revHtml;}else{const d=document.createElement('div');d.dataset.revRows='1';d.innerHTML=revHtml;revEl.appendChild(d);}}
-  const rules={real:{label:'Known cost price',color:'var(--text)',sell:0,mgn:0,cnt:0},'used-c':{label:'USED C — 10%',color:'#0d9488',sell:0,mgn:0,cnt:0},diverse:{label:'Misc / repair — 5%',color:'#d97706',sell:0,mgn:0,cnt:0},sponsor:{label:'Sponsoring — 15%',color:'#ec4899',sell:0,mgn:0,cnt:0},'no-inkoop':{label:'No cost price — 15%',color:'#6366f1',sell:0,mgn:0,cnt:0},inruil:{label:'Trade-in (neutral)',color:'#9ca3af',sell:0,mgn:0,cnt:0}};
+  const rules={real:{label:'Known cost price',color:'var(--text)',sell:0,mgn:0,cnt:0},'used-c':{label:'USED C ‚Äî 10%',color:'#0d9488',sell:0,mgn:0,cnt:0},diverse:{label:'Misc / repair ‚Äî 5%',color:'#d97706',sell:0,mgn:0,cnt:0},sponsor:{label:'Sponsoring ‚Äî 15%',color:'#ec4899',sell:0,mgn:0,cnt:0},'no-inkoop':{label:'No cost price ‚Äî 15%',color:'#6366f1',sell:0,mgn:0,cnt:0},inruil:{label:'Trade-in (neutral)',color:'#9ca3af',sell:0,mgn:0,cnt:0}};
   rows.forEach(r=>{const rk=r._marginRule||'real';if(!rules[rk])return;rules[rk].sell+=r.selling;rules[rk].mgn+=r.margin;rules[rk].cnt++;});
   const totalSell=vk.sell||0,totalMgn=vk.mgn||0,mgnPct=totalSell>0?(totalMgn/totalSell*100):0;
   const row2=(label,sell,mgn,cnt,color,bold,border)=>{const pct=sell>0?(mgn/sell*100):0;return`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;${border?'border-top:1px solid var(--border);margin-top:4px;padding-top:9px;':''}"><div><div style="font-size:${bold?'12':'11'}px;font-weight:${bold?700:500};color:${color||'var(--text2)'};">${label}</div>${cnt!==null?`<div style="font-size:10px;color:var(--muted);">${cnt} items</div>`:''}</div><div style="text-align:right;"><div style="font-size:${bold?'14':'12'}px;font-weight:${bold?800:600};color:${color||'var(--text2)'};">${fmtFull(mgn)}</div>${sell>0&&!bold?`<div style="font-size:10px;color:var(--muted);">${pct.toFixed(1)}%</div>`:''}</div></div>`;};
@@ -783,7 +848,7 @@ function renderStaffBanners(){
   cards.innerHTML=byE.map(({emp,a,rows},idx)=>{
     const color=empColor(emp);
     const initial=emp.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    const highlight=sortKey==='selling'?'Revenue':sortKey==='margin'?'Margin €':'Margin %';
+    const highlight=sortKey==='selling'?'Revenue':sortKey==='margin'?'Margin ‚Ç¨':'Margin %';
     const highlightVal=sortKey==='selling'?fmtE(a.selling):sortKey==='margin'?fmtE(a.margin):a.mpct.toFixed(1)+'%';
     let tgtHtml='';
     const b=hasBronData()?aggBron(rows):null;
@@ -803,7 +868,7 @@ function renderStaffBanners(){
       <div style="display:flex;gap:16px;flex-wrap:wrap;">
         ${sortKey!=='selling'?`<div class="jk"><div class="l">Revenue</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.selling)}</div></div>`:''}
         <div class="jk"><div class="l">Cost price</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.purchase)}</div></div>
-        ${sortKey!=='margin'?`<div class="jk"><div class="l">Margin €</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.margin)}</div></div>`:''}
+        ${sortKey!=='margin'?`<div class="jk"><div class="l">Margin ‚Ç¨</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.margin)}</div></div>`:''}
         ${sortKey!=='mpct'?`<div class="jk"><div class="l">Margin %</div><div class="v" style="font-size:14px;color:var(--text)">${a.mpct.toFixed(1)}%</div></div>`:''}
         <div class="jk"><div class="l">Consignment</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.cats.consignatie.sell)}</div></div>
         <div class="jk"><div class="l">Trade-in</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.cats.occasion.sell)}</div></div>
@@ -849,7 +914,7 @@ function getTargetForPeriod(empName){
   return null;
 }
 function daysInMonthOf(y,m){return new Date(y,m,0).getDate();}
-// Fraction of a given year elapsed as of the real "today" — past years count
+// Fraction of a given year elapsed as of the real "today" ‚Äî past years count
 // as fully elapsed, future years as not-yet-started. Flat calendar-day ratio;
 // used only as a fallback when there's no prior-year shape to learn from.
 function yearProgress(year){
@@ -876,7 +941,7 @@ function revenueUpToCutoff(year,cutoff,employee){
 function revenueForMonthUpToDay(year,month,day,employee){
   return S.rows.filter(r=>r.cat==='verkoop'&&(!employee||r.employee===employee)&&r._y===year&&r._m===month&&r._dom<=day).reduce((s,r)=>s+r.selling,0);
 }
-// Seasonally-weighted "expected fraction of the year reached by now" — a surf
+// Seasonally-weighted "expected fraction of the year reached by now" ‚Äî a surf
 // shop's revenue is nowhere near flat across the year, so a plain day-count
 // (day 223/365 = 61%) is misleading. Instead, look at prior years: what share
 // of THEIR full-year revenue had already come in by the same calendar date?
@@ -894,7 +959,7 @@ function seasonalYearFraction(year){
   if(fracs.length)return fracs.reduce((a,b)=>a+b,0)/fracs.length;
   return yearProgress(year).frac;
 }
-// How far through the currently-viewed period (month or year) "today" is —
+// How far through the currently-viewed period (month or year) "today" is ‚Äî
 // drives both the pace marker on the bar and the "Op koers" text. Month uses
 // a plain day-of-month fraction ("dezelfde snelheid" as literally asked);
 // year uses the seasonally-weighted fraction above.
@@ -913,8 +978,8 @@ function periodElapsedInfo(){
   }
   return{frac:null,isCurrent:false};
 }
-// Projected end-of-period total if the current pace holds (actual so far ÷
-// fraction of the period elapsed), expressed as a % of target — this is what
+// Projected end-of-period total if the current pace holds (actual so far √∑
+// fraction of the period elapsed), expressed as a % of target ‚Äî this is what
 // the striped bar segment visualizes. null when the period isn't in progress
 // or there's nothing to project from.
 function projectedPctOfTarget(actual,target,frac,isCurrent){
@@ -1026,7 +1091,7 @@ function mkYoyRowYear(employee){
   const prevVal=revenueUpToCutoff(prevYear,cutoff,employee);
   if(prevVal<=0)return'';
   const pct=(curVal/prevVal-1)*100;
-  const arrow=pct>=0?'▲':'▼';const sign=pct>=0?'+':'';
+  const arrow=pct>=0?'‚ñ≤':'‚ñº';const sign=pct>=0?'+':'';
   const ytdSuffix=year===new Date().getFullYear()?' (YTD)':'';
   return`<div class="tgt-meta">t.o.v. ${prevYear}${ytdSuffix}: <b>${arrow} ${sign}${pct.toFixed(0)}%</b> &middot; ${fmtE(curVal)} vs ${fmtE(prevVal)}</div>`;
 }
@@ -1043,7 +1108,7 @@ function mkYoyRowMonth(employee){
   const prevVal=revenueForMonthUpToDay(prevYear,m,day,employee);
   if(prevVal<=0)return'';
   const pct=(curVal/prevVal-1)*100;
-  const arrow=pct>=0?'▲':'▼';const sign=pct>=0?'+':'';
+  const arrow=pct>=0?'‚ñ≤':'‚ñº';const sign=pct>=0?'+':'';
   const suffix=(!before&&!after)?' t/m dag '+day:'';
   return`<div class="tgt-meta">t.o.v. ${MONTHS[m-1]} ${prevYear}${suffix}: <b>${arrow} ${sign}${pct.toFixed(0)}%</b> &middot; ${fmtE(curVal)} vs ${fmtE(prevVal)}</div>`;
 }
@@ -1106,7 +1171,7 @@ function renderTargets(){
     html+=`<div class="tgt-total">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Team totaal</div>
       ${mkBar(totalAgg.selling,tTotRev,'Revenue',teamRevProj)}
-      ${mkBar(totalAgg.margin,tTotMgn,'Marge €',teamMgnProj)}
+      ${mkBar(totalAgg.margin,tTotMgn,'Marge ‚Ç¨',teamMgnProj)}
       <div class="tgt-meta-block">
         ${mkProjectionLine(tTotRev,teamRevProj,tTotMgn,teamMgnProj)}
         ${mkYoyRow(null)}
@@ -1123,7 +1188,7 @@ function renderTargets(){
       html+=`<div class="tgt-row" style="border-left:4px solid ${color};">
         <div class="tgt-emp" style="color:${color};">${esc(first)}</div>
         ${mkBar(a.selling,t?t.revenue:null,'Revenue',empRevProj,color)}
-        ${mkBar(a.margin,t?t.margin:null,'Marge €',empMgnProj,color)}
+        ${mkBar(a.margin,t?t.margin:null,'Marge ‚Ç¨',empMgnProj,color)}
         <div class="tgt-meta-block">
           ${mkProjectionLine(t?t.revenue:null,empRevProj,t?t.margin:null,empMgnProj)}
           ${mkYoyRow(emp)}
@@ -1139,7 +1204,7 @@ function renderTargets(){
       html+=`<div class="tgt-row" style="border-left:4px solid ${me.color};">
         <div class="tgt-emp" style="color:${me.color};">${esc(me.emp.split(' ')[0])}</div>
         ${mkBar(me.a.selling,me.t?me.t.revenue:null,'Revenue',meRevProj,me.color)}
-        ${mkBar(me.a.margin,me.t?me.t.margin:null,'Marge €',meMgnProj,me.color)}
+        ${mkBar(me.a.margin,me.t?me.t.margin:null,'Marge ‚Ç¨',meMgnProj,me.color)}
         <div class="tgt-meta-block">
           ${mkProjectionLine(me.t?me.t.revenue:null,meRevProj,me.t?me.t.margin:null,meMgnProj)}
           ${mkYoyRow(me.emp)}
@@ -1157,7 +1222,7 @@ function renderLegend(id,labels,colors){
 function renderCmp(){const rows=filtered();const byE=aggByEmp(rows).sort((a,b)=>b.selling-a.selling);const lbl=pLabel();document.getElementById('cmpPeriod').textContent=lbl;document.getElementById('cmpPeriod2').textContent=lbl;const maxS=Math.max(1,...byE.map(e=>Math.abs(e.selling)));document.getElementById('cmpRev').innerHTML=byE.map(e=>{const color=empColor(e.employee);const pct=(Math.abs(e.selling)/maxS*100).toFixed(0);return'<div class="cmp-row"><span class="cmp-name" style="color:'+color+'">'+esc(e.employee.split(' ')[0])+'</span><div class="cmp-bar"><div class="cmp-fill" style="width:'+pct+'%;background:'+color+';"></div></div><span class="cmp-val">'+fmtE(e.selling)+'</span><span class="cmp-pct" style="color:var(--muted)">'+e.lines+'x</span></div>';}).join('')||'<div>Geen data</div>';const byM=[...byE].sort((a,b)=>b.mpct-a.mpct);const maxM=Math.max(1,...byM.map(e=>Math.abs(e.mpct)));document.getElementById('cmpMgn').innerHTML=byM.map(e=>{const color=empColor(e.employee);const pct=(Math.abs(e.mpct)/maxM*100).toFixed(0);const cls=e.mpct>=25?'up':e.mpct>=10?'neutral':'down';return'<div class="cmp-row"><span class="cmp-name" style="color:'+color+'">'+esc(e.employee.split(' ')[0])+'</span><div class="cmp-bar"><div class="cmp-fill" style="width:'+pct+'%;background:'+color+';"></div></div><span class="cmp-val">'+fmtE(e.margin)+'</span><span class="cmp-pct '+cls+'">'+e.mpct.toFixed(1)+'%</span></div>';}).join('')||'<div>Geen data</div>';}
 // Shared single-pass aggregates for the chart builders below. Each of
 // renderTrend/renderYearCharts used to independently re-scan the ENTIRE rows
-// array once per employee per month/day (O(emp*period*n)) — for a year view
+// array once per employee per month/day (O(emp*period*n)) ‚Äî for a year view
 // with 13 employees x 12 months that's 156 full scans per chart, x3 charts.
 // These caches turn that into one O(n) pass, keyed on year/rows so repeated
 // calls in the same render() (or unrelated re-renders) reuse it for free.
@@ -1199,15 +1264,15 @@ function renderTrend(){dc('trend');const emps=getEmps();const g=S.grain;let labe
   if(g==='range'){const pairs=makePairs(S.rangeFrom.year,S.rangeFrom.month,S.rangeTo.year,S.rangeTo.month);labels=pairs.map(p=>{const[y,m]=p.split('-');return MONTHS_S[+m-1]+(S.rangeFrom.year!==S.rangeTo.year?' '+y:'');});const aggsByYear=new Map();pairs.forEach(p=>{const[y]=p.split('-');if(!aggsByYear.has(+y))aggsByYear.set(+y,empMonthAggForYear(+y));});datasets=emps.map((emp,i)=>{const monthly=pairs.map(p=>{const[y,m]=p.split('-');return empMonthVal(aggsByYear.get(+y),emp,+m,'selling')||0;});const data=S.cumulative?monthly.map((v,i,a)=>a.slice(0,i+1).reduce((s,x)=>s+x,0)||null):monthly.map(v=>v||null);return{label:emp,data,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'18',borderWidth:2,pointRadius:2,tension:.3,spanGaps:false,fill:S.cumulative};});}
   else if(g==='year'){labels=MONTHS_S.slice();const yagg=empMonthAggForYear(S.year);datasets=emps.map((emp,i)=>{const monthly=Array.from({length:12},(_,mi)=>empMonthVal(yagg,emp,mi+1,'selling')||0);const data=S.cumulative?monthly.map((v,i,a)=>a.slice(0,i+1).reduce((s,x)=>s+x,0)||null):monthly.map(v=>v||null);return{label:emp,data,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'18',borderWidth:2,pointRadius:3,tension:.3,spanGaps:false,fill:S.cumulative};});}
   else if(g==='month'){const days=new Date(S.year,S.month,0).getDate();labels=Array.from({length:days},(_,i)=>String(i+1));const magg=empDayAggForMonth(S.year,S.month);datasets=emps.map((emp,i)=>{const daily=labels.map(d=>empDayVal(magg,emp,+d,'selling')||0);const data=S.cumulative?daily.map((v,i,a)=>a.slice(0,i+1).reduce((s,x)=>s+x,0)||null):daily.map(v=>v||null);return{label:emp,data,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'18',borderWidth:2,pointRadius:2.5,tension:.3,spanGaps:false,fill:S.cumulative};});}
-  document.getElementById('trendSub').textContent='Per medewerker · '+pLabel();
+  document.getElementById('trendSub').textContent='Per medewerker ¬∑ '+pLabel();
   const empsForLegend=getEmps();
   renderLegend('trendLegend',empsForLegend,COLORS);
-  charts.trend=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'—':fmtFull(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',maxRotation:0}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:v=>fmtE(v)},beginAtZero:false}}}});}
+  charts.trend=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'‚Äî':fmtFull(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',maxRotation:0}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:v=>fmtE(v)},beginAtZero:false}}}});}
 // -- YEAR GRAIN EXTRA CHARTS ------------------------------------------------
 function renderYearCharts(){
   dc('mgnTrend');dc('mgnPctTrend');
   const emps=getEmps();const labels=MONTHS_S.slice();
-  const baseOpts=(yFmt)=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'—':yFmt(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',maxRotation:0}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:yFmt}}}});
+  const baseOpts=(yFmt)=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'‚Äî':yFmt(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',maxRotation:0}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:yFmt}}}});
   const yagg=empMonthAggForYear(S.year);
   // Marge EUR per maand
   const mgnDS=emps.map((emp,i)=>{
@@ -1235,7 +1300,7 @@ function activeTrendYearsList(){
   return S.trendYears.filter(y=>all.includes(y));
 }
 function allYearsSelected(){const all=allTrendYears();return all.length>0&&activeTrendYearsList().length===all.length;}
-// Unified selection bar — employee chips show in every grain; the year chips
+// Unified selection bar ‚Äî employee chips show in every grain; the year chips
 // sub-block only makes sense in Trend (other grains already have their own
 // month/year/range picker).
 function renderSelectors(){
@@ -1322,7 +1387,7 @@ function renderMultiYearCharts(){
   dc('multiRevYear');dc('multiMgnPctYear');dc('season');
   const years=activeTrendYearsList();
   const empsToShow=activeSelectedEmps();
-  const baseOpts=(yFmt,yRange)=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'—':yFmt(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280'}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:yFmt},...(yRange||{})}}});
+  const baseOpts=(yFmt,yRange)=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'‚Äî':yFmt(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280'}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:yFmt},...(yRange||{})}}});
   // Revenue per jaar (grouped bar per employee)
   const revByYearDS=empsToShow.map((emp,i)=>({
     label:emp,
@@ -1342,7 +1407,7 @@ function renderMultiYearCharts(){
   const mgnRange=trimmedYRange(mgnPctByYearDS);
   charts.multiMgnPctYear=new Chart(document.getElementById('multiMgnPctYearChart'),{type:'line',data:{labels:years.map(String),datasets:mgnPctByYearDS},options:baseOpts(v=>v.toFixed(1)+'%',mgnRange)});
   renderLegend('multiMgnLegend',empsToShow,empsToShow.map(empColor));
-  // Seizoensverloop: X = maanden, een lijn per jaar — som over de geselecteerde medewerkers
+  // Seizoensverloop: X = maanden, een lijn per jaar ‚Äî som over de geselecteerde medewerkers
   const seasonDS=years.map((y,i)=>({
     label:String(y),
     data:Array.from({length:12},(_,mi)=>{const v=S.rows.filter(r=>empsToShow.includes(r.employee)&&r._y===y&&r._m===mi+1&&r.cat==='verkoop').reduce((s,r)=>s+r.selling,0);return v||null;}),
@@ -1360,7 +1425,7 @@ function renderBron(){
   document.getElementById('bronSub').textContent=pLabel()+selectedLabel();
   const simpleWrap=document.getElementById('bronSimple'),chartWrap=document.getElementById('bronChartWrap');
   dc('bron');
-  const baseOpts={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'—':fmtFull(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280'}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:v=>fmtE(v)}}}};
+  const baseOpts={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111',bodyColor:'#374151',callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y===null?'‚Äî':fmtFull(c.parsed.y))}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#6b7280'}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Poppins',size:10},color:'#6b7280',callback:v=>fmtE(v)}}}};
   if(S.grain==='month'||S.grain==='range'){
     chartWrap.style.display='none';simpleWrap.style.display='block';
     const rows=filtered().filter(bronRowFilter);
@@ -1397,10 +1462,10 @@ function renderBron(){
     renderLegend('bronLegend',['Kassa','Facturen'],[BRON_COLORS.kassa,BRON_COLORS.factuur]);
   }
 }
-// -- CATEGORIEËN (aggregaat, apart geladen CSV) ------------------------------
+// -- CATEGORIE√ãN (aggregaat, apart geladen CSV) ------------------------------
 // Categorie-namen komen 1-op-1 uit Count-IT's eigen product-group taxonomie.
 // Sommige daarvan zijn dezelfde "neutrale" posten die de hoofd-KPI Revenue ook
-// buiten "Sales" houdt (trade-in, consignment buy-ins, shipping) — die moeten
+// buiten "Sales" houdt (trade-in, consignment buy-ins, shipping) ‚Äî die moeten
 // dus apart getoond worden, anders telt de categorie-omzet hoger op dan de
 // Revenue-KPI omdat die posten daar bewust niet in meetellen.
 function catGroupType(name){
@@ -1421,7 +1486,7 @@ const CAT_TYPE_META={
 // -- PRODUCTGROEPEN: bundelt Count-IT's ~90 productgroepen in 6 hoofdgroepen.
 // Alles wat niet matcht (diversen, merchandise, kleding, shipping, rental,
 // clinics/lessen, aanbetalingen, legacy 'ZZ'/'DO NOT USE' restjes) wordt
-// bewust weggelaten — zie toelichting onder de Productgroepen-kaart.
+// bewust weggelaten ‚Äî zie toelichting onder de Productgroepen-kaart.
 // 'WINGFOIL TOTAL' is een subtotaal-regel die Count-IT zelf al genereert
 // naast de losse WING-groepen en wordt uitgesloten om dubbeltelling te voorkomen.
 const BUCKET6_META={
@@ -1467,14 +1532,14 @@ function renderCategories(){
   const maxV=Math.max(1,...salesList.map(c=>Math.abs(c.selling)));
   let html='';
   html+='<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 0 10px;border-bottom:1px dashed var(--border);margin-bottom:10px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);">Sales &mdash; excl. trade-in / consignment / shipping</div><div style="font-size:16px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;">'+fmtE(salesTotal)+' <span style="font-size:11px;font-weight:700;color:var(--muted2);">&middot; 100%</span></div></div>';
-  if(!salesList.length){html+='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px;">Geen sales-categorieën voor deze periode.</div>';}
+  if(!salesList.length){html+='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px;">Geen sales-categorie√´n voor deze periode.</div>';}
   html+=salesList.map(c=>{
     const pct=(Math.abs(c.selling)/maxV*100).toFixed(1);
     const neg=c.selling<0;
     const color=neg?'#dc2626':'#2563eb';
     const inside=pct>42;
     const share=salesTotal!==0?(c.selling/salesTotal*100):0;
-    const sub=(c.kassa||c.factuur)?('Kassa '+fmtE(c.kassa)+' · Facturen '+fmtE(c.factuur)):(c.cnt+' regel'+(c.cnt!==1?'s':''));
+    const sub=(c.kassa||c.factuur)?('Kassa '+fmtE(c.kassa)+' ¬∑ Facturen '+fmtE(c.factuur)):(c.cnt+' regel'+(c.cnt!==1?'s':''));
     return '<div class="cat-item" data-category="'+esc(c.category)+'" style="cursor:pointer;" title="Klik om verkochte items in deze categorie te tonen"><div class="br" style="grid-template-columns:180px 1fr 96px 52px;"><span class="lbl" title="'+esc(c.category)+'">'+esc(c.category)+'</span><div class="track"><div class="fill" style="width:'+pct+'%;background:'+color+';">'+(inside?'<span class="fill-val">'+fmtE(c.selling)+'</span>':'')+'</div></div><span class="out-val" style="color:'+color+'">'+fmtE(c.selling)+'</span><span style="font-size:11px;font-weight:700;color:var(--muted);text-align:right;">'+share.toFixed(1)+'%</span></div><div class="cat-sub-line">'+esc(sub)+'</div></div>';
   }).join('');
   if(neutralList.length){
@@ -1656,9 +1721,9 @@ function renderBars(){
   const byM=[...byE].sort((a,b)=>b.mpct-a.mpct);const maxM=Math.max(1,...byM.map(e=>Math.abs(e.mpct)));
   document.getElementById('mgnBars').innerHTML=byM.map(e=>{const pct=(Math.abs(e.mpct)/maxM*100).toFixed(0);const fillColor=e.mpct<0?'#dc2626':e.mpct>=25?'#059669':e.mpct>=10?'#d97706':'#dc2626';const inside=pct>42;return'<div class="br"><span class="lbl" title="'+esc(e.employee)+'">'+esc(e.employee.split(' ')[0])+'</span><div class="track"><div class="fill" style="width:'+pct+'%;background:'+fillColor+';">'+(inside?'<span class="fill-val">'+e.mpct.toFixed(1)+'%</span>':'')+'</div></div><span class="out-val" style="color:'+fillColor+'">'+e.mpct.toFixed(1)+'%</span></div>';}).join('');
 }
-function renderTable(){let rows=filtered();if(S.brandFilter){const bf=S.brandFilter.toLowerCase();rows=rows.filter(r=>(r.description||'').toLowerCase().includes(bf));}if(S.categoryFilter)rows=rows.filter(r=>r.category===S.categoryFilter);const q=S.artSearch.toLowerCase().trim();if(q)rows=rows.filter(r=>(r.article+' '+r.description+' '+r.employee+' '+r.cat).toLowerCase().includes(q));const{col,dir}=S.artSort;const mult=dir==='asc'?1:-1;const sortVal=r=>{const ds=Math.abs(r.selling);if(col==='selling')return ds;if(col==='purchase')return Math.abs(r.purchase);if(col==='margin')return r.margin;if(col==='mpct')return r.mpct;if(col==='amount')return r.amount;if(col==='article')return r.article||'';if(col==='description')return r.description||'';return ds;};rows=[...rows].sort((a,b)=>{const co=['verkoop','consignatie','occasion','verzending'];const ca=co.indexOf(a.cat),cb=co.indexOf(b.cat);if(ca!==cb)return ca-cb;const av=sortVal(a),bv=sortVal(b);return(av<bv?-1:av>bv?1:0)*mult;});document.querySelectorAll('#artTable th.sortable').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===S.artSort.col)th.classList.add(S.artSort.dir==='asc'?'sort-asc':'sort-desc');});if(!rows.length){document.getElementById('artSub').textContent='0 products · '+pLabel()+selectedLabel();document.getElementById('artBody').innerHTML='<tr><td colspan="8">No data</td></tr>';return;}const CO=['verkoop','consignatie','occasion','verzending'];const CM={verkoop:{label:'Sales',color:'#0f172a',bg:'',bdg:''},consignatie:{label:'Consignment buy-in',color:'#0d9488',bg:'#f0fdfa',bdg:'bdg-t'},occasion:{label:'Trade-in buy-in',color:'#7c3aed',bg:'#faf5ff',bdg:'bdg-p'},verzending:{label:'Shipping',color:'#d97706',bg:'#fffbeb',bdg:'bdg-y'}};const grouped={};CO.forEach(c=>grouped[c]=[]);rows.forEach(r=>{(grouped[r.cat]||grouped.verkoop).push(r);});CO.forEach(c=>{const bmap={};grouped[c].forEach(r=>{const k=r.article;if(bmap[k]){bmap[k].amount+=r.amount;bmap[k].purchase+=r.purchase;bmap[k].selling+=r.selling;bmap[k].margin+=r.margin;bmap[k]._cnt++;if(!bmap[k]._emps.includes(r.employee))bmap[k]._emps.push(r.employee);}else{bmap[k]={...r,_cnt:1,_emps:[r.employee]};}});grouped[c]=Object.values(bmap).map(r=>{r.mpct=r.selling!==0?(r.margin/r.selling*100):0;if(r._emps.length>1)r._empLabel=r._emps.map(e=>e.split(' ')[0]).join(', ');return r;});});const bTotal=CO.reduce((s,c)=>s+grouped[c].length,0);document.getElementById('artSub').textContent=bTotal+' products · '+pLabel()+selectedLabel();let html='';CO.forEach(catKey=>{const grp=grouped[catKey];if(!grp.length)return;const meta=CM[catKey];const tS=catKey==='verkoop'?grp.reduce((s,r)=>s+r.selling,0):grp.reduce((s,r)=>s+Math.abs(r.selling),0);const tP=catKey==='verkoop'?grp.reduce((s,r)=>s+r.purchase,0):grp.reduce((s,r)=>s+Math.abs(r.purchase),0);const tM=grp.reduce((s,r)=>s+(catKey==='verkoop'?r.margin:0),0);const mp=tS>0&&catKey==='verkoop'?(tM/tS*100):null;html+='<tr style="background:'+(meta.bg||'var(--surface2)')+';border-top:2px solid '+meta.color+'22;"><td colspan="3" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+meta.label+' <span style="font-weight:500;color:var(--muted)">('+grp.length+' regel'+(grp.length!==1?'s':'')+')</span>'+(catKey!=='verkoop'?'<span style="font-size:10px;margin-left:8px;color:var(--muted2)">neutral</span>':'')+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">—</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+fmtFull(tP)+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+fmtFull(tS)+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+(catKey==='verkoop'?fmtFull(tM):'—')+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+(mp!==null?mp.toFixed(1)+'%':'—')+'</td></tr>';grp.forEach(r=>{const dS=Math.abs(r.selling);const dP=Math.abs(r.purchase);const ec=empColor(r.employee);const mc=r.mpct>=25?'bdg-g':r.mpct>=10?'bdg-y':'bdg-r';html+='<tr style="'+(meta.bg?'background:'+meta.bg+';':'')+'opacity:.95;"><td><span style="font-size:11px;font-weight:700;color:'+ec+'">'+esc(r._empLabel||r.employee.split(' ')[0])+'</span></td><td style="font-family:monospace;font-size:11px">'+esc((r.article||'').replace(/^EXCHANGE:/,''))+(r._cnt>1?' <span style="font-size:10px;padding:1px 4px;background:var(--surface2);border-radius:3px;color:var(--muted);font-family:var(--font);">×'+r._cnt+'</span>':'')+'</td><td>'+esc(r.description)+'</td><td class="num">'+r.amount+'</td><td class="num">'+fmtFull(dP)+'</td><td class="num" style="color:'+meta.color+';'+(catKey==='verkoop'?'':'font-style:italic;')+'"><b>'+fmtFull(dS)+'</b></td><td class="num">'+(catKey==='verkoop'?fmtFull(r.margin):'<span style="color:var(--muted2)">—</span>')+'</td><td class="num">'+(catKey==='verkoop'?'<span class="bdg '+mc+'">'+r.mpct.toFixed(1)+'%</span>':'<span class="bdg '+meta.bdg+'">'+meta.label.split(' ')[0]+'</span>')+'</td></tr>';});});document.getElementById('artBody').innerHTML=html;}
+function renderTable(){let rows=filtered();if(S.brandFilter){const bf=S.brandFilter.toLowerCase();rows=rows.filter(r=>(r.description||'').toLowerCase().includes(bf));}if(S.categoryFilter){rows=rows.filter(r=>r.category===S.categoryFilter);if(!rows.length&&S.catRows&&S.catRows.length){const sel=activeSelectedEmps();const agg=S.catRows.filter(r=>matchPeriod(r)&&sel.includes(r.employee)&&r.category===S.categoryFilter).reduce((s,r)=>s+r.selling,0);document.getElementById('artSub').textContent='0 products ¬∑ '+pLabel()+selectedLabel();document.getElementById('artBody').innerHTML='<tr><td colspan="8">Geen artikel-detail beschikbaar voor "'+esc(S.categoryFilter)+'" in deze periode (categorie-totaal: '+fmtFull(agg)+'). Count-IT geeft voor sommige categorie/periode-combinaties geen artikelniveau terug.</td></tr>';return;}}const q=S.artSearch.toLowerCase().trim();if(q)rows=rows.filter(r=>(r.article+' '+r.description+' '+r.employee+' '+r.cat).toLowerCase().includes(q));const{col,dir}=S.artSort;const mult=dir==='asc'?1:-1;const sortVal=r=>{const ds=Math.abs(r.selling);if(col==='selling')return ds;if(col==='purchase')return Math.abs(r.purchase);if(col==='margin')return r.margin;if(col==='mpct')return r.mpct;if(col==='amount')return r.amount;if(col==='article')return r.article||'';if(col==='description')return r.description||'';return ds;};rows=[...rows].sort((a,b)=>{const co=['verkoop','consignatie','occasion','verzending'];const ca=co.indexOf(a.cat),cb=co.indexOf(b.cat);if(ca!==cb)return ca-cb;const av=sortVal(a),bv=sortVal(b);return(av<bv?-1:av>bv?1:0)*mult;});document.querySelectorAll('#artTable th.sortable').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===S.artSort.col)th.classList.add(S.artSort.dir==='asc'?'sort-asc':'sort-desc');});if(!rows.length){document.getElementById('artSub').textContent='0 products ¬∑ '+pLabel()+selectedLabel();document.getElementById('artBody').innerHTML='<tr><td colspan="8">No data</td></tr>';return;}const CO=['verkoop','consignatie','occasion','verzending'];const CM={verkoop:{label:'Sales',color:'#0f172a',bg:'',bdg:''},consignatie:{label:'Consignment buy-in',color:'#0d9488',bg:'#f0fdfa',bdg:'bdg-t'},occasion:{label:'Trade-in buy-in',color:'#7c3aed',bg:'#faf5ff',bdg:'bdg-p'},verzending:{label:'Shipping',color:'#d97706',bg:'#fffbeb',bdg:'bdg-y'}};const grouped={};CO.forEach(c=>grouped[c]=[]);rows.forEach(r=>{(grouped[r.cat]||grouped.verkoop).push(r);});CO.forEach(c=>{const bmap={};grouped[c].forEach(r=>{const k=r.article;if(bmap[k]){bmap[k].amount+=r.amount;bmap[k].purchase+=r.purchase;bmap[k].selling+=r.selling;bmap[k].margin+=r.margin;bmap[k]._cnt++;if(!bmap[k]._emps.includes(r.employee))bmap[k]._emps.push(r.employee);}else{bmap[k]={...r,_cnt:1,_emps:[r.employee]};}});grouped[c]=Object.values(bmap).map(r=>{r.mpct=r.selling!==0?(r.margin/r.selling*100):0;if(r._emps.length>1)r._empLabel=r._emps.map(e=>e.split(' ')[0]).join(', ');return r;});});const bTotal=CO.reduce((s,c)=>s+grouped[c].length,0);document.getElementById('artSub').textContent=bTotal+' products ¬∑ '+pLabel()+selectedLabel();let html='';CO.forEach(catKey=>{const grp=grouped[catKey];if(!grp.length)return;const meta=CM[catKey];const tS=catKey==='verkoop'?grp.reduce((s,r)=>s+r.selling,0):grp.reduce((s,r)=>s+Math.abs(r.selling),0);const tP=catKey==='verkoop'?grp.reduce((s,r)=>s+r.purchase,0):grp.reduce((s,r)=>s+Math.abs(r.purchase),0);const tM=grp.reduce((s,r)=>s+(catKey==='verkoop'?r.margin:0),0);const mp=tS>0&&catKey==='verkoop'?(tM/tS*100):null;html+='<tr style="background:'+(meta.bg||'var(--surface2)')+';border-top:2px solid '+meta.color+'22;"><td colspan="3" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+meta.label+' <span style="font-weight:500;color:var(--muted)">('+grp.length+' regel'+(grp.length!==1?'s':'')+')</span>'+(catKey!=='verkoop'?'<span style="font-size:10px;margin-left:8px;color:var(--muted2)">neutral</span>':'')+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">‚Äî</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+fmtFull(tP)+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+fmtFull(tS)+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+(catKey==='verkoop'?fmtFull(tM):'‚Äî')+'</td><td class="num" style="padding:8px 11px;font-size:11px;font-weight:700;color:'+meta.color+';">'+(mp!==null?mp.toFixed(1)+'%':'‚Äî')+'</td></tr>';grp.forEach(r=>{const dS=Math.abs(r.selling);const dP=Math.abs(r.purchase);const ec=empColor(r.employee);const mc=r.mpct>=25?'bdg-g':r.mpct>=10?'bdg-y':'bdg-r';html+='<tr style="'+(meta.bg?'background:'+meta.bg+';':'')+'opacity:.95;"><td><span style="font-size:11px;font-weight:700;color:'+ec+'">'+esc(r._empLabel||r.employee.split(' ')[0])+'</span></td><td style="font-family:monospace;font-size:11px">'+esc((r.article||'').replace(/^EXCHANGE:/,''))+(r._cnt>1?' <span style="font-size:10px;padding:1px 4px;background:var(--surface2);border-radius:3px;color:var(--muted);font-family:var(--font);">√ó'+r._cnt+'</span>':'')+'</td><td>'+esc(r.description)+'</td><td class="num">'+r.amount+'</td><td class="num">'+fmtFull(dP)+'</td><td class="num" style="color:'+meta.color+';'+(catKey==='verkoop'?'':'font-style:italic;')+'"><b>'+fmtFull(dS)+'</b></td><td class="num">'+(catKey==='verkoop'?fmtFull(r.margin):'<span style="color:var(--muted2)">‚Äî</span>')+'</td><td class="num">'+(catKey==='verkoop'?'<span class="bdg '+mc+'">'+r.mpct.toFixed(1)+'%</span>':'<span class="bdg '+meta.bdg+'">'+meta.label.split(' ')[0]+'</span>')+'</td></tr>';});});document.getElementById('artBody').innerHTML=html;}
 // -- TARGET LOADING ----------------------------------------------------------
-// Targets live ONLY in the Google Sheet — no local fallback, no cached copy of
+// Targets live ONLY in the Google Sheet ‚Äî no local fallback, no cached copy of
 // the actual numbers. Only the Web App URL itself is remembered locally (it's
 // config, not data) so it doesn't need to be re-pasted on every load.
 const TARGETS_API_URL_KEY='sc_targets_api_url';
@@ -1808,9 +1873,9 @@ function saveCurrentTargets(){
     .catch(()=>{targetsDirty=wasDirty;flashTargetsError('geen verbinding');});
 }
 // -- CSV PARSING ------------------------------------------------------------
-function parseCsv(rawRows){if(!rawRows.length)throw new Error('CSV is leeg.');const find=(obj,pats)=>findCol(obj,pats);const s=rawRows[0];const cDate=find(s,['date','datum']);if(!cDate)throw new Error('Geen datum-kolom gevonden.');const cEmp=find(s,['employee','medewerker','verkoper']);if(!cEmp)throw new Error('Geen employee-kolom gevonden.');const cArt=find(s,['article_number','article number','artikel','sku']);const cDesc=find(s,['description','omschrijving']);const cAmt=find(s,['amount','aantal','qty']);const cPur=find(s,['purchase_price','purchase price','inkoop','inkoopprijs']);const cSell=find(s,['selling_price','selling price','omzet','verkoopprijs','subtotal']);const cMgn=find(s,['margin','marge','profit']);const cBron=find(s,['bron','source','kanaal','channel','verkoopkanaal','document_type','documenttype','order_type','ordertype']);const cCat=find(s,['category','categorie']);const isExchangeArt=art=>art.startsWith('EXCHANGE:');const isParentArt=art=>{if(!art||/^[-\s]*$/.test(art))return true;if(art.startsWith('EXCHANGE:'))return true;return/\s/.test(art);};const out=[];for(const r of rawRows){const rawArt=(r[cArt]||'').trim();const dStr=(r[cDate]||'').trim();if(!dStr)continue;const d=parseDate(dStr);if(!d)continue;const isParent=isParentArt(rawArt);const art=isParent&&!rawArt.startsWith('EXCHANGE:')?('EXCHANGE:'+rawArt):rawArt;const sell_=pn(r[cSell]),amt_=cAmt?pn(r[cAmt]):1;if(isExchangeArt(art)&&Math.abs(sell_)===0&&amt_===0)continue;const iso=isoWeek(d);const sell=pn(r[cSell]);const pur=cPur?pn(r[cPur]):0;const mgn=cMgn?pn(r[cMgn]):(sell-pur);const rowObj={_date:d,_y:d.getFullYear(),_m:d.getMonth()+1,_dom:d.getDate(),_dow:d.getDay(),_w:iso.week,_wy:iso.year,date:ymd(d),employee:(r[cEmp]||'Onbekend').trim(),article:art,description:cDesc?(r[cDesc]||'').trim():'',amount:cAmt?pn(r[cAmt]):1,purchase:pur,selling:sell,margin:mgn,isCredit:(cAmt?pn(r[cAmt]):1)<0||sell<0,mpct:sell!==0?(mgn/sell*100):0,bron:cBron?normBron(r[cBron]):null,category:cCat?(r[cCat]||'').trim():''};rowObj.cat=categorize(rowObj);applyUsedCFix(rowObj);if(rowObj.amount<0&&rowObj.selling===0){rowObj.purchase=0;rowObj.margin=0;rowObj.mpct=0;}out.push(rowObj);}const merged=[];out.forEach((r,idx)=>{if(!isExchangeArt(r.article)){merged.push(r);return;}const xSell=r.selling,xPur=r.purchase,xName=r.article.replace(/^EXCHANGE:/,'')||r.description;let ti=-1;for(let j=merged.length-1;j>=0;j--){if(merged[j].amount>0&&!merged[j]._merged){ti=j;break;}}if(ti===-1){for(let j=idx+1;j<out.length;j++){if(!isExchangeArt(out[j].article)&&out[j].amount>0&&!out[j]._merged){out[j]._pendingExchange={sell:xSell,pur:xPur,name:xName};return;}}}if(ti>=0){const t=merged[ti];const ns=Math.round((xSell+t.selling)*100)/100;const np=Math.round((xPur+t.purchase)*100)/100;t.description=xName+' › '+t.description;t.selling=ns;t.purchase=np;t.margin=Math.round((ns-np)*100)/100;t.mpct=ns!==0?(t.margin/ns*100):0;t._merged=true;}else{merged.push({...r,article:'EXCHANGE',description:xName,purchase:xSell,margin:0,mpct:0});}});merged.forEach(r=>{if(!r._pendingExchange)return;const p=r._pendingExchange;const ns=Math.round((p.sell+r.selling)*100)/100;const np=Math.round((p.pur+r.purchase)*100)/100;r.description=p.name+' › '+r.description;r.selling=ns;r.purchase=np;r.margin=Math.round((ns-np)*100)/100;r.mpct=ns!==0?(r.margin/ns*100):0;delete r._pendingExchange;});const clean=merged.filter(r=>Math.abs(r.amount)<=100);
+function parseCsv(rawRows){if(!rawRows.length)throw new Error('CSV is leeg.');const find=(obj,pats)=>findCol(obj,pats);const s=rawRows[0];const cDate=find(s,['date','datum']);if(!cDate)throw new Error('Geen datum-kolom gevonden.');const cEmp=find(s,['employee','medewerker','verkoper']);if(!cEmp)throw new Error('Geen employee-kolom gevonden.');const cArt=find(s,['article_number','article number','artikel','sku']);const cDesc=find(s,['description','omschrijving']);const cAmt=find(s,['amount','aantal','qty']);const cPur=find(s,['purchase_price','purchase price','inkoop','inkoopprijs']);const cSell=find(s,['selling_price','selling price','omzet','verkoopprijs','subtotal']);const cMgn=find(s,['margin','marge','profit']);const cBron=find(s,['bron','source','kanaal','channel','verkoopkanaal','document_type','documenttype','order_type','ordertype']);const cCat=find(s,['category','categorie']);const isExchangeArt=art=>art.startsWith('EXCHANGE:');const isParentArt=art=>{if(!art||/^[-\s]*$/.test(art))return true;if(art.startsWith('EXCHANGE:'))return true;return/\s/.test(art);};const out=[];for(const r of rawRows){const rawArt=(r[cArt]||'').trim();const dStr=(r[cDate]||'').trim();if(!dStr)continue;const d=parseDate(dStr);if(!d)continue;const isParent=isParentArt(rawArt);const art=isParent&&!rawArt.startsWith('EXCHANGE:')?('EXCHANGE:'+rawArt):rawArt;const sell_=pn(r[cSell]),amt_=cAmt?pn(r[cAmt]):1;if(isExchangeArt(art)&&Math.abs(sell_)===0&&amt_===0)continue;const iso=isoWeek(d);const sell=pn(r[cSell]);const pur=cPur?pn(r[cPur]):0;const mgn=cMgn?pn(r[cMgn]):(sell-pur);const rowObj={_date:d,_y:d.getFullYear(),_m:d.getMonth()+1,_dom:d.getDate(),_dow:d.getDay(),_w:iso.week,_wy:iso.year,date:ymd(d),employee:(r[cEmp]||'Onbekend').trim(),article:art,description:cDesc?(r[cDesc]||'').trim():'',amount:cAmt?pn(r[cAmt]):1,purchase:pur,selling:sell,margin:mgn,isCredit:(cAmt?pn(r[cAmt]):1)<0||sell<0,mpct:sell!==0?(mgn/sell*100):0,bron:cBron?normBron(r[cBron]):null,category:cCat?(r[cCat]||'').trim():''};rowObj.cat=categorize(rowObj);applyUsedCFix(rowObj);if(rowObj.amount<0&&rowObj.selling===0){rowObj.purchase=0;rowObj.margin=0;rowObj.mpct=0;}out.push(rowObj);}const merged=[];out.forEach((r,idx)=>{if(!isExchangeArt(r.article)){merged.push(r);return;}const xSell=r.selling,xPur=r.purchase,xName=r.article.replace(/^EXCHANGE:/,'')||r.description;let ti=-1;for(let j=merged.length-1;j>=0;j--){if(merged[j].amount>0&&!merged[j]._merged){ti=j;break;}}if(ti===-1){for(let j=idx+1;j<out.length;j++){if(!isExchangeArt(out[j].article)&&out[j].amount>0&&!out[j]._merged){out[j]._pendingExchange={sell:xSell,pur:xPur,name:xName};return;}}}if(ti>=0){const t=merged[ti];const ns=Math.round((xSell+t.selling)*100)/100;const np=Math.round((xPur+t.purchase)*100)/100;t.description=xName+' ‚Ä∫ '+t.description;t.selling=ns;t.purchase=np;t.margin=Math.round((ns-np)*100)/100;t.mpct=ns!==0?(t.margin/ns*100):0;t._merged=true;}else{merged.push({...r,article:'EXCHANGE',description:xName,purchase:xSell,margin:0,mpct:0});}});merged.forEach(r=>{if(!r._pendingExchange)return;const p=r._pendingExchange;const ns=Math.round((p.sell+r.selling)*100)/100;const np=Math.round((p.pur+r.purchase)*100)/100;r.description=p.name+' ‚Ä∫ '+r.description;r.selling=ns;r.purchase=np;r.margin=Math.round((ns-np)*100)/100;r.mpct=ns!==0?(r.margin/ns*100):0;delete r._pendingExchange;});const clean=merged.filter(r=>Math.abs(r.amount)<=100);
 if(!clean.length)throw new Error('Geen geldige rijen gevonden.');return clean;}
-// Eén CSV, gebundeld via een 'dimension'-kolom (article/category/brand) — elk
+// E√©n CSV, gebundeld via een 'dimension'-kolom (article/category/brand) ‚Äî elk
 // stukje gaat naar de bestaande parser voor dat type. Zonder dimension-kolom
 // (oud-formaat bestand) wordt alles als artikel-rijen behandeld, ongewijzigd
 // gedrag t.o.v. voorheen.
@@ -1828,7 +1893,7 @@ function splitCombinedCsv(rawRows){
   return{articleRows,catRows:catRawRows,brandRows:brandRawRows};
 }
 // -- LOGIN GATE ---------------------------------------------------------
-// Static per-person access codes — not real security (this is a client-side
+// Static per-person access codes ‚Äî not real security (this is a client-side
 // static page), just keeps casual visitors out before the CSV upload step.
 const EMPLOYEE_CODES={
   'Florian Lars Biesterbos':'2824',
@@ -1836,7 +1901,7 @@ const EMPLOYEE_CODES={
   'Harmen Visscher':'5506',
   'Henny Prinsen':'5012',
   'Jan Willem van Dijken':'4657',
-  'Jascha Körfer':'3286',
+  'Jascha K√∂rfer':'3286',
   'Jasper Jongepier':'2679',
   'Jelle van der Veen':'9935',
   'Mark Immenga':'2424',
@@ -1891,7 +1956,7 @@ initLoginGate();
 const gateFile=document.getElementById('gateFile');
 const gateDrop=document.getElementById('gateDrop');
 const csvErr=document.getElementById('csvError');
-const doFile=file=>{csvErr.classList.remove('active');Papa.parse(file,{header:true,skipEmptyLines:true,transformHeader:h=>h.trim(),complete:res=>{try{const split=splitCombinedCsv(res.data);let rows=parseCsv(split.articleRows);rows=restrictRowsToLoggedInEmployee(rows);if(loggedInEmployee&&!rows.length)throw new Error('Geen data gevonden voor '+loggedInEmployee+' in dit bestand.');S.rows=rows;S.catRows=split.catRows.length?restrictRowsToLoggedInEmployee(parseCatCsv(split.catRows)):[];S.brandRows=split.brandRows.length?restrictRowsToLoggedInEmployee(parseBrandsCsv(split.brandRows)):[];populateBrandFilterSelect();const dates=S.rows.map(r=>r._date).sort((a,b)=>b-a);if(dates.length){S.year=dates[0].getFullYear();S.month=dates[0].getMonth()+1;}S.grain='month';S.selectedEmps=null;document.getElementById('gate').classList.add('hidden');document.getElementById('app').classList.add('active');document.querySelectorAll('.grain-chip').forEach(b=>b.classList.toggle('active',b.dataset.grain==='month'));loadTargets();renderPicker();render();}catch(e){csvErr.textContent=e.message;csvErr.classList.add('active');}},error:e=>{csvErr.textContent=e.message;csvErr.classList.add('active');}});};
+const doFile=file=>{csvErr.classList.remove('active');Papa.parse(file,{header:true,skipEmptyLines:true,transformHeader:h=>h.trim(),complete:res=>{try{const split=splitCombinedCsv(res.data);let rows=parseCsv(split.articleRows);rows=restrictRowsToLoggedInEmployee(rows);if(loggedInEmployee&&!rows.length)throw new Error('Geen data gevonden voor '+loggedInEmployee+' in dit bestand.');S.rows=rows;S.catRows=split.catRows.length?restrictRowsToLoggedInEmployee(parseCatCsv(split.catRows)):[];S.brandRows=split.brandRows.length?restrictRowsToLoggedInEmployee(parseBrandsCsv(split.brandRows)):[];populateBrandFilterSelect();const dates=S.rows.map(r=>r._date).sort((a,b)=>b-a);if(dates.length){S.year=dates[0].getFullYear();S.month=dates[0].getMonth()+1;}S.grain='month';S.selectedEmps=null;S.subPeriod=null;S.subPeriodMode='';document.getElementById('gate').classList.add('hidden');document.getElementById('app').classList.add('active');document.querySelectorAll('.grain-chip').forEach(b=>b.classList.toggle('active',b.dataset.grain==='month'));loadTargets();renderPicker();render();}catch(e){csvErr.textContent=e.message;csvErr.classList.add('active');}},error:e=>{csvErr.textContent=e.message;csvErr.classList.add('active');}});};
 gateFile.onchange=e=>{if(e.target.files[0])doFile(e.target.files[0]);};
 gateDrop.ondragover=e=>{e.preventDefault();gateDrop.classList.add('dragover');};
 gateDrop.ondragleave=()=>{gateDrop.classList.remove('dragover');};
@@ -1951,6 +2016,12 @@ document.querySelectorAll('.grain-chip').forEach(b=>b.onclick=()=>{
   if(S.grain==='range'&&S.rows.length){const yms=S.rows.map(r=>r._y*100+r._m);const minYm=Math.min(...yms),maxYm=Math.max(...yms);S.rangeFrom={year:Math.floor(minYm/100),month:minYm%100};S.rangeTo={year:Math.floor(maxYm/100),month:maxYm%100};}
   renderPicker();render();
 });
+document.querySelectorAll('#subPeriodChips .subp-chip').forEach(b=>b.onclick=()=>{
+  const sub=b.dataset.sub;
+  S.subPeriodMode=sub;
+  if(!sub){S.subPeriod=null;render();}
+  else{renderSubPeriodRow();}
+});
 document.getElementById('btnNormal').onclick=()=>{S.cumulative=false;document.getElementById('btnNormal').style.background='var(--accent)';document.getElementById('btnNormal').style.color='#fff';document.getElementById('btnCumul').style.background='transparent';document.getElementById('btnCumul').style.color='var(--muted)';renderTrend();};
 document.getElementById('btnCumul').onclick=()=>{S.cumulative=true;document.getElementById('btnCumul').style.background='var(--accent)';document.getElementById('btnCumul').style.color='#fff';document.getElementById('btnNormal').style.background='transparent';document.getElementById('btnNormal').style.color='var(--muted)';renderTrend();};
 document.getElementById('navPrev').onclick=()=>stepNav(-1);
@@ -1962,7 +2033,7 @@ document.querySelectorAll('#artTable th.sortable').forEach(th=>th.onclick=()=>{c
 function stepNav(d){
   if(S.grain==='trend'||S.grain==='range')return;
   if(S.grain==='year'){S.year+=d;}
-  else if(S.grain==='month'){let y=S.year,m=S.month+d;if(m<1){m=12;y--;}if(m>12){m=1;y++;}S.month=m;S.year=y;}
+  else if(S.grain==='month'){let y=S.year,m=S.month+d;if(m<1){m=12;y--;}if(m>12){m=1;y++;}S.month=m;S.year=y;S.subPeriod=null;S.subPeriodMode='';}
   renderPicker();render();
 }
 // -- CSS for staff banner jk labels ----------------------------------------
