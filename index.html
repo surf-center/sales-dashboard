@@ -162,15 +162,11 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
   <div class="gate-card">
     <img src="logo.png" alt="Surfcenter" class="gate-logo" onerror="this.style.display='none';">
     <div class="gate-title">Analytics</div>
-    <div class="gate-sub">Laad je margins CSV om verder te gaan</div>
+    <div class="gate-sub">Upload je bestand om verder te gaan</div>
     <label class="gate-drop" id="gateDrop">
-      <input type="file" id="gateFile" accept=".csv,.enc,text/csv" style="display:none;">
-      <span class="gate-btn">+ Kies CSV- of .enc-bestand</span>
+      <input type="file" id="gateFile" style="display:none;">
+      <span class="gate-btn">+ Upload bestand</span>
     </label>
-    <form id="encForm" style="display:none;margin-top:14px;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">
-      <input type="password" id="encPassword" autocomplete="off" placeholder="Wachtwoord" style="width:200px;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:11px;outline:none;">
-      <button type="submit" class="gate-btn">Ontgrendel</button>
-    </form>
     <div class="gate-error" id="csvError"></div>
     <div class="gate-spinner" id="gateSpinner">Laden...</div>
   </div>
@@ -1862,7 +1858,7 @@ const EMPLOYEE_CODES={
   'Reinder de Vries':'1488'
 };
 const ADMIN_EMPLOYEE='Harmen Visscher';
-let loggedInEmployee=null;
+let loggedInEmployee=null,loggedInCode=null;
 function isAdmin(){return loggedInEmployee===ADMIN_EMPLOYEE;}
 function checkLoginCode(code){
   const trimmed=(code||'').trim();
@@ -1896,6 +1892,7 @@ document.getElementById('loginForm').addEventListener('submit',e=>{
   const err=document.getElementById('loginError');
   if(name){
     err.classList.remove('active');
+    loggedInCode=input.value.trim();
     completeLogin(name);
   }else{
     err.classList.add('active');
@@ -1909,32 +1906,35 @@ const gateFile=document.getElementById('gateFile');
 const gateDrop=document.getElementById('gateDrop');
 const csvErr=document.getElementById('csvError');
 // .enc = b"SCENC1" + salt(16) + iv(12) + AES-256-GCM(ct+tag), sleutel via PBKDF2-SHA256 600k (zie encrypt_csv.py). Ontsleutelen gebeurt alleen lokaal.
+// Het wachtwoord zelf staat per medewerker versleuteld met zijn/haar 4-cijferige code in ENC_SLOTS
+// (salt16+iv12+GCM, zelfde PBKDF2). Gegenereerd door make_enc_slots.py - niet met de hand aanpassen.
 const ENC_MAGIC='SCENC1',ENC_ITER=600000;
-const encForm=document.getElementById('encForm'),encPassword=document.getElementById('encPassword');
-let pendingEnc=null;
+const ENC_SLOTS={'Florian Lars Biesterbos':'ErZOrYPsq/Qk6i1eAnlZyjUhwxKhIHA9jqSsTshlDScYtEljpZZUGItudX/AxjMlmAo0/dSvJSlneZurw/jg1UYh7h8=','Haico Pols':'X7ksmCfFSIE6dO8e8kRiMpsYJs5S3sQWD9hPwczNG8e0KfMVipeSsvfSmdc3/n/80bQcoa1me7FjU2nPBChdXH74Nw4=','Harmen Visscher':'vfsnCSmEYB6LF55WpPlli5qvO8NO15tz5VJ/vN6hZ3qB+pScAEXQyjTjPXOvZrWG00I8TWB1SQwNCpice4FItclbg9Q=','Henny Prinsen':'3gIUpXl0WTcw3fzXTXuI/d38saoeCYgJlPLxBqH9kZ0Mardk4gwbviCAfkVpNRWpzketytxBgVs+ifeMg9KVemO7apY=','Jan Willem van Dijken':'mJfOzQvoF92MNv/7kcb1c/7s696jPkp0A9z6+UMQL4StCdlX7F4evMjNl67GhXqXvptbNemYMnBF/LrapQjFFD8V9oU=','Jascha K\u00F6rfer':'qGJqw/X9Ld3u/hLCU4FpnHNYE9UfzpTMCEzyBwPxO5lCciFELhhdvLsyIRM7U0393eS82tHz4blLUyKWqM0WJMdAP18=','Jasper Jongepier':'YPN4gLAIP6rGGOWgazN/qd2P2Ai2uGZZtzgb/oJSAKNzGol5QIdNm00/DCRiuSIXEJ9ACfMWnwHU/ksOERxb+sLVInw=','Jelle van der Veen':'hQaLzEjZzprfTyPvN9rciJqBTVZPl5xrFKqAkB+JsPpXamUhlJp8uSTYP8p/Eo1qjBiAatbeYNl4RYi4L4MoTqXB4SE=','Mark Immenga':'HYhp2EJ5AqpdWD62sHekL5nddyVdgveKJuIcbS+S9hep61kl5RH0SDWlDJiptqf4NPxd9Mmp10yOqCMPQTIx5WK9b0c=','Mats Riemeijer':'ZG3dcYwOZdUi18N+haPmy76QY9Jm5nzM+4gnmE7+LdDeM2rwXxLFetSukLFnxNcuzsGF/dYwqpb3yxvxsSYXJYd+OX4=','Nicolas Prien':'s2Xor6MNdYaX/h6cRL4KPon58pMCbZJDaTUfFOJi/fdWOpLOwoxbYuIfjqxONVMgJNig8MbPK4wbQNITG7gt+DDiUCw=','Reinder de Vries':'2M2S1GWez/ADcydP1BaiW/wFesj0eeAHhBDtl684Tu7vcwtFuI4uzqK66DmcKNYRE3a7yDy7Ykw4lkhKa6zez3nZXkQ='};
 const showCsvErr=m=>{csvErr.textContent=m;csvErr.classList.add('active');};
-async function decryptEnc(buf,pw){
-  const b=new Uint8Array(buf);
-  if(new TextDecoder().decode(b.slice(0,6))!==ENC_MAGIC)throw new Error('Geen geldig .enc-bestand.');
-  const salt=b.slice(6,22),iv=b.slice(22,34),ct=b.slice(34);
-  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+async function gcmDecrypt(secret,salt,iv,ct){
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),'PBKDF2',false,['deriveKey']);
   const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ENC_ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
-  try{return new TextDecoder('utf-8').decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct));}
-  catch(e){throw new Error('Onjuist wachtwoord of beschadigd bestand.');}
+  return new TextDecoder('utf-8').decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct));
 }
-encForm.onsubmit=async e=>{
-  e.preventDefault();if(!pendingEnc)return;
-  csvErr.classList.remove('active');
-  const spin=document.getElementById('gateSpinner');spin.classList.add('active');
-  try{const text=await decryptEnc(await pendingEnc.arrayBuffer(),encPassword.value);encPassword.value='';encForm.style.display='none';pendingEnc=null;parseCsvInput(text);}
-  catch(err){showCsvErr(err.message);encPassword.select();}
-  finally{spin.classList.remove('active');}
-};
+async function decryptEnc(buf){
+  const slot=ENC_SLOTS[loggedInEmployee];
+  if(!slot||!loggedInCode)throw new Error('Je code is niet gekoppeld aan versleutelde bestanden.');
+  const s=Uint8Array.from(atob(slot),c=>c.charCodeAt(0));
+  let pw;
+  try{pw=await gcmDecrypt(loggedInCode,s.slice(0,16),s.slice(16,28),s.slice(28));}
+  catch(e){throw new Error('Je code is niet gekoppeld aan versleutelde bestanden.');}
+  const b=new Uint8Array(buf);
+  try{return await gcmDecrypt(pw,b.slice(6,22),b.slice(22,34),b.slice(34));}
+  catch(e){throw new Error('Bestand kan niet worden geopend (verouderd of beschadigd).');}
+}
 const doFile=async file=>{
   csvErr.classList.remove('active');
   const head=new TextDecoder().decode(new Uint8Array(await file.slice(0,6).arrayBuffer()));
-  if(head===ENC_MAGIC||/\.enc$/i.test(file.name)){pendingEnc=file;encForm.style.display='flex';encPassword.value='';encPassword.focus();return;}
-  encForm.style.display='none';pendingEnc=null;parseCsvInput(file);
+  if(head!==ENC_MAGIC){parseCsvInput(file);return;}
+  const spin=document.getElementById('gateSpinner');spin.classList.add('active');
+  try{parseCsvInput(await decryptEnc(await file.arrayBuffer()));}
+  catch(err){showCsvErr(err.message);}
+  finally{spin.classList.remove('active');}
 };
 const parseCsvInput=input=>{csvErr.classList.remove('active');Papa.parse(input,{header:true,skipEmptyLines:true,transformHeader:h=>h.trim(),complete:res=>{try{const split=splitCombinedCsv(res.data);let rows=parseCsv(split.articleRows);rows=restrictRowsToLoggedInEmployee(rows);if(loggedInEmployee&&!rows.length)throw new Error('Geen data gevonden voor '+loggedInEmployee+' in dit bestand.');S.rows=rows;S.catRows=split.catRows.length?restrictRowsToLoggedInEmployee(parseCatCsv(split.catRows)):[];S.brandRows=split.brandRows.length?restrictRowsToLoggedInEmployee(parseBrandsCsv(split.brandRows)):[];populateBrandFilterSelect();const dates=S.rows.map(r=>r._date).sort((a,b)=>b-a);if(dates.length){S.year=dates[0].getFullYear();S.month=dates[0].getMonth()+1;}S.grain='month';S.selectedEmps=null;document.getElementById('gate').classList.add('hidden');document.getElementById('app').classList.add('active');document.querySelectorAll('.grain-chip').forEach(b=>b.classList.toggle('active',b.dataset.grain==='month'));loadTargets();renderPicker();render();}catch(e){csvErr.textContent=e.message;csvErr.classList.add('active');}},error:e=>{csvErr.textContent=e.message;csvErr.classList.add('active');}});};
 gateFile.onchange=e=>{if(e.target.files[0])doFile(e.target.files[0]);};
@@ -1981,7 +1981,7 @@ document.getElementById('catRows').addEventListener('click',e=>{
   if(detail&&(detail.style.display==='none'||detail.style.display===''))toggleKpiDetail('kLinesDetail',document.getElementById('kLinesBtn'));
   document.getElementById('kLinesCard').scrollIntoView({block:'center',behavior:'smooth'});
 });
-document.getElementById('btnLogout').onclick=()=>{S.rows=[];S.catRows=[];S.selectedEmps=null;S.targets={};S.brandRows=[];S.brandFilter='';S.categoryFilter='';S.yoyYears=null;populateBrandFilterSelect();loggedInEmployee=null;document.getElementById('app').classList.remove('active');document.getElementById('gate').classList.add('hidden');document.getElementById('loginGate').style.display='flex';document.getElementById('loginCodeInput').value='';document.getElementById('loginCodeInput').focus();};
+document.getElementById('btnLogout').onclick=()=>{S.rows=[];S.catRows=[];S.selectedEmps=null;S.targets={};S.brandRows=[];S.brandFilter='';S.categoryFilter='';S.yoyYears=null;populateBrandFilterSelect();loggedInEmployee=null;loggedInCode=null;document.getElementById('app').classList.remove('active');document.getElementById('gate').classList.add('hidden');document.getElementById('loginGate').style.display='flex';document.getElementById('loginCodeInput').value='';document.getElementById('loginCodeInput').focus();};
 document.getElementById('btnTargets').onclick=openTargetsModal;
 document.getElementById('targetsModalClose').onclick=closeTargetsModal;
 document.getElementById('targetsModal').addEventListener('click',e=>{if(e.target.id==='targetsModal')closeTargetsModal();});
