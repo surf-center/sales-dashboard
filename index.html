@@ -143,6 +143,36 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
 .cat-item{padding:9px 0;border-bottom:1px solid var(--border);}
 .cat-item:last-child{border-bottom:none;}
 .cat-sub-line{padding-left:190px;font-size:10px;color:var(--muted);margin-top:3px;}
+/* -- Mobiel ---------------------------------------------------- */
+@media(max-width:640px){
+  header{padding:10px 12px;gap:8px;}
+  .hdr-brand{position:static;transform:none;pointer-events:auto;min-width:0;}
+  .hdr-logo{height:20px;}
+  .hdr-title{font-size:13px;}
+  main{padding:12px 12px 40px;}
+  .period-bar{padding:12px;}
+  .period-lbl{min-width:0;flex:1;font-size:13px;padding:0 6px;}
+  .grain-chip{padding:7px 12px;}
+  .card,.cmp-card{padding:16px 14px;}
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px;}
+  .kpi{padding:14px;}
+  .kpi-val{font-size:22px;letter-spacing:-.4px;}
+  .yoy-grid{grid-template-columns:1fr !important;}
+  .split-grid{grid-template-columns:1fr !important;gap:14px !important;}
+  .split-grid .chart-wrap{height:200px !important;max-width:240px;width:100%;margin:0 auto;}
+  .cat-item .br{grid-template-columns:minmax(0,32%) minmax(40px,1fr) auto auto !important;gap:8px;}
+  .cat-sub-line{padding-left:0;}
+  .br .out-val{min-width:0;}
+  .cmp-row{grid-template-columns:72px minmax(0,1fr) auto auto;gap:6px;}
+  .bron-emp-row{grid-template-columns:64px minmax(0,1fr) auto !important;gap:8px !important;}
+  .emp-card{padding:14px !important;gap:12px !important;}
+  .emp-card>div:nth-child(2){min-width:0 !important;}
+  .emp-stats{display:grid !important;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px 12px !important;width:100%;}
+  .emp-stats .jk{grid-column:span 2;}
+  .emp-stats .jk-wide{grid-column:span 3;}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .modal-overlay{padding:12px;}
+}
 </style>
 </head>
 <body>
@@ -222,7 +252,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
         <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;">Jaren (YoY)</div>
         <div id="yoyYearChips" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="yoy-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="card" style="margin-bottom:0;">
           <div class="card-head"><div><div class="card-title">Revenue</div><div class="card-sub" id="yoyRevSub">-</div></div></div>
           <div id="yoyRevRows"></div>
@@ -382,7 +412,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       <div class="card-head">
         <div><div class="card-title">Productgroepen</div><div class="card-sub" id="bucketSub">-</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;">
+      <div class="split-grid" style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;">
         <div class="chart-wrap" style="height:220px;"><canvas id="bucketChart"></canvas></div>
         <div id="bucketRows"></div>
       </div>
@@ -393,7 +423,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       <div class="card-head">
         <div><div class="card-title">Merken</div><div class="card-sub" id="brandSub">-</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;">
+      <div class="split-grid" style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;">
         <div class="chart-wrap" style="height:220px;"><canvas id="brandChart"></canvas></div>
         <div id="brandRows"></div>
       </div>
@@ -802,7 +832,7 @@ function renderStaffBanners(){
     const b=hasBronData()?aggBron(rows):null;
     const kAov=b&&b.kassa.cnt?b.kassa.sell/b.kassa.cnt:0;
     const fAov=b&&b.factuur.cnt?b.factuur.sell/b.factuur.cnt:0;
-    return`<div style="background:var(--surface);border:1px solid var(--border);border-left:4px solid ${color};border-radius:var(--r);padding:16px 20px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;box-shadow:var(--sh-sm);">
+    return`<div class="emp-card" style="background:var(--surface);border:1px solid var(--border);border-left:4px solid ${color};border-radius:var(--r);padding:16px 20px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;box-shadow:var(--sh-sm);">
       <div style="width:44px;height:44px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">${initial}</div>
       <div style="flex:1;min-width:120px;">
         <div style="font-size:14px;font-weight:700;color:${color};">${esc(emp.split(' ')[0])}</div>
@@ -813,15 +843,15 @@ function renderStaffBanners(){
         <div style="font-size:9px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.5px;opacity:.7;">${highlight}</div>
         <div style="font-size:18px;font-weight:800;color:${color};font-variant-numeric:tabular-nums;">${highlightVal}</div>
       </div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div class="emp-stats" style="display:flex;gap:16px;flex-wrap:wrap;">
         ${sortKey!=='selling'?`<div class="jk"><div class="l">Revenue</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.selling)}</div></div>`:''}
         <div class="jk"><div class="l">Cost price</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.purchase)}</div></div>
         ${sortKey!=='margin'?`<div class="jk"><div class="l">Margin \u20AC</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.margin)}</div></div>`:''}
         ${sortKey!=='mpct'?`<div class="jk"><div class="l">Margin %</div><div class="v" style="font-size:14px;color:var(--text)">${a.mpct.toFixed(1)}%</div></div>`:''}
         <div class="jk"><div class="l">Consignment</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.cats.consignatie.sell)}</div></div>
         <div class="jk"><div class="l">Trade-in</div><div class="v" style="font-size:14px;color:var(--text)">${fmtE(a.cats.occasion.sell)}</div></div>
-        ${b?`<div class="jk"><div class="l">Kassa</div><div class="v" style="font-size:14px;color:var(--text)">${b.kassa.cnt}x - ${fmtE(kAov)} AOV</div></div>
-        <div class="jk"><div class="l">Facturen</div><div class="v" style="font-size:14px;color:var(--text)">${b.factuur.cnt}x - ${fmtE(fAov)} AOV</div></div>`:''}
+        ${b?`<div class="jk jk-wide"><div class="l">Kassa</div><div class="v" style="font-size:14px;color:var(--text)">${b.kassa.cnt}x - ${fmtE(kAov)} AOV</div></div>
+        <div class="jk jk-wide"><div class="l">Facturen</div><div class="v" style="font-size:14px;color:var(--text)">${b.factuur.cnt}x - ${fmtE(fAov)} AOV</div></div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -1635,7 +1665,7 @@ function renderBronByEmp(){
     const factuurShare=e.total>0?(e.factuur/e.total*100):0;
     const kPct=(e.kassa/maxT*100).toFixed(2);
     const fPct=(e.factuur/maxT*100).toFixed(2);
-    return`<div style="display:grid;grid-template-columns:96px 1fr 170px;gap:12px;align-items:center;">
+    return`<div class="bron-emp-row" style="display:grid;grid-template-columns:96px 1fr 170px;gap:12px;align-items:center;">
       <span style="font-size:12px;font-weight:700;color:${e.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(e.emp)}">${esc(e.emp.split(' ')[0])}</span>
       <div style="height:22px;border-radius:5px;overflow:hidden;display:flex;background:var(--surface3);">
         <div style="width:${kPct}%;background:${BRON_COLORS.kassa};" title="Kassa: ${fmtE(e.kassa)} (${kassaShare.toFixed(1)}%)"></div>
