@@ -519,6 +519,10 @@ html.embed #dashboard-wrap main{padding-top:18px;}
       <div class="mini mini-click" id="kpiAvgLostTile" title="Click for cancelled-order insights — trend, distribution, comparison"><div class="mini-lbl">Avg. lost order <span class="mini-hint">↗</span></div><div class="mini-val" id="kpiAvgLost">€0</div><div class="mini-sub" id="kpiAvgLostSub"><span class="delta neutral">—</span> vs prior year · avg cancelled</div></div>
       <div class="mini mini-click" id="kpiRecoveryTile" title="Click for recovery details — cancelled customers who later placed a successful order"><div class="mini-lbl">Recovery rate <span class="mini-hint">↗</span></div><div class="mini-val" id="kpiRecovery">—</div><div class="mini-sub" id="kpiRecoverySub"><span class="delta neutral">—</span> cancelled → recovered</div></div>
     </div>
+    <div class="card" id="tgtCard" style="display:none;">
+      <div class="card-head"><div><div class="card-title">Target vs Gerealiseerd</div><div class="card-sub" id="tgtSub">-</div></div></div>
+      <div id="tgtBody"></div>
+    </div>
     <div class="card">
       <div class="card-head">
         <div>
@@ -1211,10 +1215,53 @@ html.embed #dashboard-wrap main{padding-top:18px;}
   // ============ RENDER ============
   const charts = {};
   function dc(id){ if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+  // ============ TARGETS (same Google Sheet as the sales targets, row "Webshop") ============
+  const WS_TARGETS_URL='https://script.google.com/macros/s/AKfycbwwuKuCE-DTa06jWj8CCGgr1wHFGEeXptOWReCs4nGFsRIBq8N2Gpt_PbR5RkWljrwd/exec';
+  state.targets={};
+  function loadWebshopTargets(){
+    fetch(WS_TARGETS_URL+'?action=getTargets').then(r=>r.json()).then(d=>{if(!d||d.error)return;const k=Object.keys(d).find(n=>n.toLowerCase()==='webshop');state.targets=k?d[k]:{};if(state.orders.length)renderTargetsWs();}).catch(()=>{});
+  }
+  loadWebshopTargets();
+  function targetForPeriodWs(){
+    const T=state.targets||{};const y=state.year||currentYear();
+    if(state.grain==='month'){const m=state.month||(state.refDate.getMonth()+1);const v=T[y+'-'+String(m).padStart(2,'0')];return v&&v.revenue!=null?v.revenue:null;}
+    if(state.grain==='year'){let sum=0,any=false;Object.entries(T).forEach(([k,v])=>{if(k.startsWith(y+'-')&&v.revenue!=null){sum+=v.revenue;any=true;}});return any?sum:null;}
+    return null;
+  }
+  function renderTargetsWs(){
+    const card=document.getElementById('tgtCard');if(!card)return;
+    const target=(state.grain==='month'||state.grain==='year')?targetForPeriodWs():null;
+    if(target==null||target<=0){card.style.display='none';return;}
+    card.style.display='';
+    const spec=periodSpec();const curKey=state.year||currentYear();
+    const actual=aggForYear(spec,curKey).result;
+    // year-over-year on the same stretch: while the period runs, last year only up to the same day
+    const now=new Date(),cut=o=>o._date&&((o._date.getMonth()<now.getMonth())||(o._date.getMonth()===now.getMonth()&&o._date.getDate()<=now.getDate()));
+    const isPartial=spec.isPartial?spec.isPartial(curKey):false;
+    const prev=isPartial?aggForYear({...spec,matches:(o,y)=>spec.matches(o,y)&&cut(o)},curKey-1).result:aggForYear(spec,curKey-1).result;
+    const frac=isPartial?currentElapsedRatio():null;
+    const projPct=(isPartial&&frac>0&&frac<1)?(actual/frac)/target*100:null;
+    const pctV=Math.max(0,actual/target*100),w=Math.min(pctV,100);
+    let stripe='';
+    if(projPct!=null){const ew=Math.min(Math.max(projPct,0),100)-w;if(ew>0)stripe='<div style="position:absolute;left:'+w.toFixed(1)+'%;top:0;bottom:0;width:'+ew.toFixed(1)+'%;background:repeating-linear-gradient(45deg,#60a5fa4d,#60a5fa4d 5px,#60a5fa22 5px,#60a5fa22 10px);border-left:1px dashed #60a5fa;" title="Verwacht bij huidige snelheid"></div>';}
+    const pctColor=pctV>=100?'var(--green,#16a34a)':'var(--muted)';
+    const bar='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;">'
+      +'<span style="width:64px;font-size:12px;font-weight:700;flex-shrink:0;">Revenue</span>'
+      +'<div style="flex:1;height:16px;background:var(--surface3);border-radius:5px;overflow:hidden;position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:'+w.toFixed(1)+'%;background:var(--text);border-radius:5px;"></div>'+stripe+'</div>'
+      +'<div style="min-width:92px;text-align:right;"><div style="font-size:12px;font-weight:700;">'+fmtEur(actual)+'</div><div style="font-size:10px;color:var(--muted2);">van '+fmtEur(target)+'</div></div>'
+      +'<div style="min-width:48px;text-align:right;"><span style="font-size:11px;font-weight:700;color:'+pctColor+';">'+pctV.toFixed(0)+'%</span></div></div>';
+    const meta=[];
+    if(projPct!=null)meta.push('Verwacht: revenue <b>'+fmtEur(target*projPct/100)+'</b> ('+projPct.toFixed(0)+'%)');
+    if(prev>0){const d=(actual/prev-1)*100;meta.push('t.o.v. '+(curKey-1)+(isPartial?' (t/m '+now.getDate()+' '+MONTH_NAMES[now.getMonth()].toLowerCase()+')':'')+': <b>'+(d>=0?'▲ +':'▼ ')+d.toFixed(0)+'%</b> - '+fmtEur(actual)+' vs '+fmtEur(prev));}
+    document.getElementById('tgtSub').textContent=spec.label+' · '+(state.revenueMode==='tax'?'incl. btw':state.revenueMode==='ship'?'incl. verzending':'excl. verzending');
+    document.getElementById('tgtBody').innerHTML=bar+meta.map(m=>'<div style="font-size:11.5px;color:var(--muted);margin-top:4px;">'+m+'</div>').join('')
+      +(projPct!=null?'<div style="font-size:10px;color:var(--muted2);margin-top:8px;">Het gestreepte deel van de balk toont wat verwacht wordt bij de huidige snelheid, t.o.v. de target.</div>':'');
+  }
   function render(){
     renderPeriodLabel();
     renderCompare();
     renderMini();
+    renderTargetsWs();
     renderTrend();
     renderWeekly();
     renderHourly();
@@ -4022,6 +4069,10 @@ html.embed #dashboard-wrap main{padding-top:18px;}
       window.addEventListener('message', e => {
         if (e.origin !== location.origin || !e.data || e.data.type !== 'sc-webshop-csv') return;
         parse(e.data.csv);
+      });
+      window.addEventListener('message', e => {
+        if (e.origin !== location.origin || !e.data || e.data.type !== 'sc-webshop-targets') return;
+        state.targets = e.data.targets || {}; if (state.orders.length) renderTargetsWs();
       });
       window.parent.postMessage({type:'sc-webshop-ready'}, location.origin);
     }

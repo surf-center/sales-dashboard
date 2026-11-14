@@ -1755,10 +1755,16 @@ function syncTargetsFromSheet(){
     .then(data=>{
       if(!data||data.error)return;
       if(targetsDirty)return; // don't clobber an in-progress edit in the modal
-      S.targets=data;render();
+      S.targets=data;render();pushWebshopTargets();
       if(!document.getElementById('targetsModal').classList.contains('hidden'))renderTargetsModalTable();
     })
     .catch(()=>{});
+}
+function pushWebshopTargets(){
+  const f=document.getElementById('webshopFrame');
+  if(!f||!webshopFrameReady||!f.contentWindow)return;
+  const k=Object.keys(S.targets||{}).find(n=>n.toLowerCase()==='webshop');
+  f.contentWindow.postMessage({type:'sc-webshop-targets',targets:k?S.targets[k]:{}},location.origin);
 }
 function loadTargets(){
   S.targets={};
@@ -1770,10 +1776,10 @@ function openTargetsModal(){
   if(!isAdmin())return;
   const emps=getEmps();
   if(!emps.length){alert('Laad eerst een CSV om medewerkers te zien.');return;}
-  if(!targetsModalEmp||!emps.includes(targetsModalEmp))targetsModalEmp=emps[0];
+  if(!targetsModalEmp||(!emps.includes(targetsModalEmp)&&targetsModalEmp!=='Webshop'))targetsModalEmp=emps[0];
   if(!targetsModalYear)targetsModalYear=S.year||new Date().getFullYear();
   const sel=document.getElementById('targetsEmpSelect');
-  sel.innerHTML=emps.map(e=>'<option value="'+esc(e)+'"'+(e===targetsModalEmp?' selected':'')+'>'+esc(e)+'</option>').join('');
+  sel.innerHTML=emps.map(e=>'<option value="'+esc(e)+'"'+(e===targetsModalEmp?' selected':'')+'>'+esc(e)+'</option>').join('')+'<option value="Webshop"'+(targetsModalEmp==='Webshop'?' selected':'')+'>Webshop (omzet)</option>';
   targetsDirty=false;
   renderTargetsModalTable();
   document.getElementById('targetsModal').classList.remove('hidden');
@@ -1822,7 +1828,7 @@ function renderTargetsModalTable(){
     const v=et[key]||{};
     return '<tr data-key="'+key+'"><td>'+name+'</td>'
       +'<td class="num"><input type="number" class="tgt-input" data-field="revenue" value="'+(v.revenue!=null?v.revenue:'')+'" placeholder="-" style="width:110px;text-align:right;border:1px solid var(--border);border-radius:7px;padding:5px 8px;font-size:12px;"></td>'
-      +'<td class="num"><input type="number" class="tgt-input" data-field="margin" value="'+(v.margin!=null?v.margin:'')+'" placeholder="-" style="width:110px;text-align:right;border:1px solid var(--border);border-radius:7px;padding:5px 8px;font-size:12px;"></td></tr>';
+      +(empKey==='Webshop'?'<td class="num" style="color:var(--muted2);">-</td></tr>':'<td class="num"><input type="number" class="tgt-input" data-field="margin" value="'+(v.margin!=null?v.margin:'')+'" placeholder="-" style="width:110px;text-align:right;border:1px solid var(--border);border-radius:7px;padding:5px 8px;font-size:12px;"></td></tr>');
   }).join('');
   renderTargetsFoot();
 }
@@ -1879,7 +1885,7 @@ function saveCurrentTargets(){
     .then(r=>r.json())
     .then(data=>{
       if(data&&!data.error){
-        S.targets=data;
+        S.targets=data;pushWebshopTargets();
         flashTargetsOk();
         renderTargetsFoot();renderTargets();renderStaffBanners();
       }else{
