@@ -43,6 +43,11 @@ header{background:rgba(255,255,255,.88);backdrop-filter:blur(14px);border-bottom
 .hdr-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
 .hdr-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-soft);}
 main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
+.view-tabs{display:inline-flex;gap:3px;padding:3px;background:var(--surface3);border:1px solid var(--border);border-radius:10px;position:relative;z-index:1;}
+.view-tab{padding:6px 14px;font-size:12px;font-weight:600;font-family:inherit;border:none;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer;}
+.view-tab.active{background:var(--accent);color:#fff;}
+#webshopView{display:none;}#webshopView.active{display:block;}
+#webshopFrame{display:block;width:100%;border:0;background:var(--bg);}
 .period-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 20px;margin-bottom:20px;display:flex;flex-direction:column;gap:12px;}
 .period-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;}
 .period-row--bottom{justify-content:center;gap:16px;border-top:1px solid var(--border);padding-top:12px;}
@@ -152,6 +157,9 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
   header{padding:10px 12px;gap:8px;}
   .hdr-brand{position:static;transform:none;pointer-events:auto;min-width:0;}
   .hdr-logo{height:20px;max-width:46vw;}
+  header:has(#viewTabs:not([style*="none"])) .hdr-title{display:none;}
+  header:has(#viewTabs:not([style*="none"])) .hdr-logo{max-width:34vw;}
+  .view-tab{padding:6px 10px;}
   .gate-card{padding:32px 20px 26px;}
   .gate-logo{height:auto;max-height:28px;}
   .hdr-title{font-size:13px;}
@@ -212,6 +220,10 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
     <div class="hdr-brand">
       <img src="logo.png" alt="Surfcenter" class="hdr-logo" onerror="this.style.display='none';">
       <div class="hdr-title">Analytics</div>
+    </div>
+    <div class="view-tabs" id="viewTabs" style="display:none;">
+      <button type="button" class="view-tab active" data-view="sales">Sales</button>
+      <button type="button" class="view-tab" data-view="webshop">Webshop</button>
     </div>
     <div class="hdr-spacer"></div>
     <div style="display:flex;gap:7px;align-items:center;">
@@ -501,6 +513,7 @@ main{padding:22px 28px 56px;max-width:1400px;margin:0 auto;}
       <div class="legend" id="bronEmpLegend"></div>
     </div>
   </main>
+  <div id="webshopView"><iframe id="webshopFrame" title="Webshop"></iframe></div>
 </div>
 <div id="targetsModal" class="modal-overlay hidden">
   <div class="modal-card">
@@ -1988,10 +2001,50 @@ const doFile=async file=>{
   const head=new TextDecoder().decode(new Uint8Array(await file.slice(0,6).arrayBuffer()));
   if(head!==ENC_MAGIC){parseCsvInput(file);return;}
   const spin=document.getElementById('gateSpinner');spin.classList.add('active');
-  try{parseCsvInput(await decryptEnc(await file.arrayBuffer()));}
+  try{handleDecrypted(await decryptEnc(await file.arrayBuffer()));}
   catch(err){showCsvErr(err.message);}
   finally{spin.classList.remove('active');}
 };
+// -- WEBSHOP TAB --------------------------------------------------------------
+// Een .enc kan een bundel zijn: {"scbundle":1,"sales":"<csv>","webshop":"<Magento orders-csv>"} (gemaakt door de sales-refresh).
+// De webshop-tab (webshop.html in een iframe) is alleen zichtbaar voor WEBSHOP_USERS. Een gewone .enc/.csv werkt zoals altijd.
+const WEBSHOP_USERS=['Harmen Visscher','Mark Immenga'];
+const canSeeWebshop=()=>WEBSHOP_USERS.includes(loggedInEmployee);
+let webshopCsv=null,webshopFrameReady=false;
+function handleDecrypted(text){
+  let sales=text,web=null;
+  if(text.startsWith('{"scbundle"')){
+    let b;try{b=JSON.parse(text);}catch(e){throw new Error('Bestand kan niet worden geopend (beschadigde bundel).');}
+    sales=b.sales||'';web=b.webshop||null;
+  }
+  setWebshopData(canSeeWebshop()?web:null);
+  parseCsvInput(sales);
+}
+function setWebshopData(csv){
+  webshopCsv=csv||null;webshopFrameReady=false;
+  document.getElementById('webshopFrame').removeAttribute('src');
+  document.getElementById('viewTabs').style.display=webshopCsv?'':'none';
+  showView('sales');
+}
+function showView(v){
+  const web=v==='webshop'&&!!webshopCsv;
+  document.querySelector('#app > main').style.display=web?'none':'';
+  document.getElementById('webshopView').classList.toggle('active',web);
+  document.querySelectorAll('#viewTabs .view-tab').forEach(b=>b.classList.toggle('active',b.dataset.view===(web?'webshop':'sales')));
+  const t=document.getElementById('btnTargets');if(t)t.style.display=(isAdmin()&&!web)?'':'none';
+  if(web){
+    const f=document.getElementById('webshopFrame');
+    f.style.height='calc(100dvh - '+document.querySelector('#app > header').offsetHeight+'px)';
+    if(!f.getAttribute('src'))f.src='webshop.html?embed=1';
+  }
+}
+document.querySelectorAll('#viewTabs .view-tab').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+window.addEventListener('message',e=>{
+  const f=document.getElementById('webshopFrame');
+  if(e.origin!==location.origin||e.source!==f.contentWindow||!e.data||e.data.type!=='sc-webshop-ready')return;
+  webshopFrameReady=true;
+  if(webshopCsv)f.contentWindow.postMessage({type:'sc-webshop-csv',csv:webshopCsv},location.origin);
+});
 const parseCsvInput=input=>{csvErr.classList.remove('active');Papa.parse(input,{header:true,skipEmptyLines:true,transformHeader:h=>h.trim(),complete:res=>{try{const split=splitCombinedCsv(res.data);let rows=parseCsv(split.articleRows);rows=restrictRowsToLoggedInEmployee(rows);if(loggedInEmployee&&!rows.length)throw new Error('Geen data gevonden voor '+loggedInEmployee+' in dit bestand.');S.rows=rows;S.catRows=split.catRows.length?restrictRowsToLoggedInEmployee(parseCatCsv(split.catRows)):[];S.brandRows=split.brandRows.length?restrictRowsToLoggedInEmployee(parseBrandsCsv(split.brandRows)):[];populateBrandFilterSelect();const dates=S.rows.map(r=>r._date).sort((a,b)=>b-a);if(dates.length){S.year=dates[0].getFullYear();S.month=dates[0].getMonth()+1;}S.grain='month';S.selectedEmps=null;document.getElementById('gate').classList.add('hidden');document.getElementById('app').classList.add('active');document.querySelectorAll('.grain-chip').forEach(b=>b.classList.toggle('active',b.dataset.grain==='month'));loadTargets();renderPicker();render();}catch(e){csvErr.textContent=e.message;csvErr.classList.add('active');}},error:e=>{csvErr.textContent=e.message;csvErr.classList.add('active');}});};
 gateFile.onchange=e=>{if(e.target.files[0])doFile(e.target.files[0]);};
 gateDrop.ondragover=e=>{e.preventDefault();gateDrop.classList.add('dragover');};
@@ -2037,7 +2090,7 @@ document.getElementById('catRows').addEventListener('click',e=>{
   if(detail&&(detail.style.display==='none'||detail.style.display===''))toggleKpiDetail('kLinesDetail',document.getElementById('kLinesBtn'));
   document.getElementById('kLinesCard').scrollIntoView({block:'center',behavior:'smooth'});
 });
-document.getElementById('btnLogout').onclick=()=>{S.rows=[];S.catRows=[];S.selectedEmps=null;S.targets={};S.brandRows=[];S.brandFilter='';S.categoryFilter='';S.yoyYears=null;populateBrandFilterSelect();loggedInEmployee=null;loggedInCode=null;document.getElementById('app').classList.remove('active');document.getElementById('gate').classList.add('hidden');document.getElementById('loginGate').style.display='flex';document.getElementById('loginCodeInput').value='';document.getElementById('loginCodeInput').focus();};
+document.getElementById('btnLogout').onclick=()=>{setWebshopData(null);S.rows=[];S.catRows=[];S.selectedEmps=null;S.targets={};S.brandRows=[];S.brandFilter='';S.categoryFilter='';S.yoyYears=null;populateBrandFilterSelect();loggedInEmployee=null;loggedInCode=null;document.getElementById('app').classList.remove('active');document.getElementById('gate').classList.add('hidden');document.getElementById('loginGate').style.display='flex';document.getElementById('loginCodeInput').value='';document.getElementById('loginCodeInput').focus();};
 document.getElementById('btnTargets').onclick=openTargetsModal;
 document.getElementById('targetsModalClose').onclick=closeTargetsModal;
 document.getElementById('targetsModal').addEventListener('click',e=>{if(e.target.id==='targetsModal')closeTargetsModal();});
